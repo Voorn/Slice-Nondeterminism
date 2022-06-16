@@ -281,6 +281,89 @@ proj₂ (ℝ-α A E X Y Z) (l , err e , ret z) (tt , (inj₂ i , tt) , () , p)
 ℙ-pseudo-mult A E X Y (ret t , ret r) (inj₁ i , j , tt) = ((tt , tt) , j) , refl
 
 
+-- Monoidal comonad
+
+ℙ-moncom-mult : (A E X Y : Set) → PK-≡ (PK-∘ (ℙ A E X Y) (PK-T-δ A E (X × Y)))
+  (PK-∘ (PK-T-δ A E X ⊗ PK-T-δ A E Y) (PK-∘ (ℙ A E _ _) (PK-T A E (ℙ A E X Y))))
+proj₁ (ℙ-moncom-mult A E X Y) (ret x , ret y) (inj₁ i , j) =
+  ((tt , tt) , ((inj₁ tt) , (inj₁ tt))) , refl
+proj₁ (ℙ-moncom-mult A E X Y) (act a l , ret y) (inj₁ i , inj₁ j) =
+  (((inj₁ tt) , tt) , ((inj₁ tt) , (inj₁ i))) , refl
+proj₁ (ℙ-moncom-mult A E X Y) (act a l , act b r) (inj₁ i , inj₁ j) =
+  (((inj₁ tt) , inj₁ tt) , (inj₁ tt) , (inj₁ i)) , refl
+proj₁ (ℙ-moncom-mult A E X Y) (act a l , err e) (inj₁ i , inj₁ j) =
+  (((inj₁ tt) , inj₁ tt) , (inj₁ tt) , (inj₁ i)) , refl
+proj₁ (ℙ-moncom-mult A E X Y) (act a l , r) (inj₁ i , inj₂ j)
+  with proj₁ (ℙ-moncom-mult A E X Y) (l , r) (i , j)
+... | ((u , v) , (w , p)) , eq = ((inj₂ u  , v) , inj₁ w , p) , cong (act a) eq
+proj₁ (ℙ-moncom-mult A E X Y) (err e , ret y) (inj₁ i , inj₁ x) =
+  (((inj₁ tt) , tt) , ((inj₁ tt) , (inj₁ tt))) , refl
+proj₁ (ℙ-moncom-mult A E X Y) (err e , act a r) (inj₁ i , inj₁ x) =
+  (((inj₁ tt) , (inj₁ tt)) , ((inj₁ tt) , (inj₁ tt))) , refl
+proj₁ (ℙ-moncom-mult A E X Y) (err e , err v) (inj₁ i , inj₁ x) =
+  (((inj₁ tt ) , (inj₁ tt)) , ((inj₁ tt) , (inj₁ tt))) , refl
+proj₁ (ℙ-moncom-mult A E X Y) (err e , r) (inj₁ i , inj₂ y) =
+  (((inj₂ tt) , PK-T-δ-Total A E Y r) , (inj₁ tt) , tt) , refl
+proj₁ (ℙ-moncom-mult A E X Y) (ret x , ret y) (inj₂ i , j) =
+  ((tt , tt) , ((inj₁ tt) , (inj₁ tt))) , refl
+proj₁ (ℙ-moncom-mult A E X Y) (ret y , act a l) (inj₂ i , inj₁ j) =
+  ((tt , (inj₁ tt)) , ((inj₁ tt) , (inj₂ i))) , refl
+proj₁ (ℙ-moncom-mult A E X Y) (act a l , act b r) (inj₂ i , inj₁ j) =
+  (((inj₁ tt) , inj₁ tt) , (inj₁ tt) , (inj₂ i)) , refl
+proj₁ (ℙ-moncom-mult A E X Y) (err e , act b r) (inj₂ i , inj₁ j) =
+  (((inj₁ tt) , inj₁ tt) , (inj₁ tt) , (inj₂ i)) , refl
+proj₁ (ℙ-moncom-mult A E X Y) (l , act a r) (inj₂ i , inj₂ j)
+  with proj₁ (ℙ-moncom-mult A E X Y) (l , r) (i , j)
+... | ((u , v) , (w , p)) , eq = ((u , inj₂ v) , inj₂ w , p) , cong (act a) eq
+proj₁ (ℙ-moncom-mult A E X Y) (ret x , err e) (inj₂ i , inj₁ x) =
+  ((tt , (inj₁ tt)) , ((inj₁ tt) , (inj₂ tt))) , refl
+proj₁ (ℙ-moncom-mult A E X Y) (act a r , err e) (inj₂ i , inj₁ x) =
+  (((inj₁ tt) , (inj₁ tt)) , ((inj₁ tt) , (inj₂ tt))) , refl
+proj₁ (ℙ-moncom-mult A E X Y) (err e , err v) (inj₂ i , inj₁ x) =
+  (((inj₁ tt ) , (inj₁ tt)) , ((inj₁ tt) , (inj₂ tt))) , refl
+proj₁ (ℙ-moncom-mult A E X Y) (r , err e) (inj₂ i , inj₂ y) =
+  ((PK-T-δ-Total A E X r , (inj₂ tt)) , (inj₂ tt) , tt) , refl
+
+
+
+proj₂ (ℙ-moncom-mult A E X Y) (act a t , r) ((inj₂ i , j) , inj₁ k , v)
+  with proj₂ (ℙ-moncom-mult A E X Y) (t , r) ((i , j) , k , v)
+... | (u , w) , eq = ((inj₁ u) , (inj₂ w)) , (cong (act a) eq)
+proj₂ (ℙ-moncom-mult A E X Y) (err e , r) ((inj₂ y , j) , inj₁ k , v) = ((inj₁ tt) , (inj₂ tt)) , refl
+proj₂ (ℙ-moncom-mult A E X Y) (ret x , ret y) ((i , j) , inj₁ k , inj₁ tt) = ((inj₁ tt) , tt) , refl
+proj₂ (ℙ-moncom-mult A E X Y) (ret x , ret y) ((i , j) , inj₁ k , inj₂ tt) = ((inj₁ tt) , tt) , refl
+proj₂ (ℙ-moncom-mult A E X Y) (ret x , act a r) ((i , inj₁ j) , inj₁ k , inj₂ y) = ((inj₂ y) , (inj₁ tt)) , refl
+proj₂ (ℙ-moncom-mult A E X Y) (ret x , err e) ((i , inj₁ j) , inj₁ k , inj₂ tt) = ((inj₂ tt) , (inj₁ tt)) , refl
+proj₂ (ℙ-moncom-mult A E X Y) (act a t , ret y) ((inj₁ i , j) , inj₁ k , inj₁ v) = (inj₁ v , inj₁ tt) , refl
+proj₂ (ℙ-moncom-mult A E X Y) (act a t , act b r) ((inj₁ i , inj₁ x) , inj₁ k , inj₁ v) = ((inj₁ v) , (inj₁ tt)) , refl
+proj₂ (ℙ-moncom-mult A E X Y) (act a t , act b r) ((inj₁ i , inj₁ x) , inj₁ k , inj₂ v) = ((inj₂ v) , (inj₁ tt)) , refl
+proj₂ (ℙ-moncom-mult A E X Y) (act a t , err e) ((inj₁ i , inj₁ j) , inj₁ k , inj₁ v) = ((inj₁ v) , (inj₁ tt)) , refl
+proj₂ (ℙ-moncom-mult A E X Y) (act a t , err e) ((inj₁ i , inj₁ j) , inj₁ k , inj₂ v) = ((inj₂ v) , (inj₁ tt)) , refl
+proj₂ (ℙ-moncom-mult A E X Y) (err e , ret y) ((inj₁ x , j) , inj₁ k , inj₁ tt) = ((inj₁ tt) , (inj₁ tt)) , refl
+proj₂ (ℙ-moncom-mult A E X Y) (err e , act b r) ((inj₁ x , inj₁ j) , inj₁ k , inj₁ v) = (inj₁ v , inj₁ tt) , refl
+proj₂ (ℙ-moncom-mult A E X Y) (err e , act b r) ((inj₁ x , inj₁ j) , inj₁ k , inj₂ v) = (inj₂ v , inj₁ tt) , refl
+proj₂ (ℙ-moncom-mult A E X Y) (err e , err f) ((inj₁ i , inj₁ j) , inj₁ k , inj₁ v) = ((inj₁ tt) , (inj₁ tt)) , refl
+proj₂ (ℙ-moncom-mult A E X Y) (err e , err f) ((inj₁ i , inj₁ j) , inj₁ k , inj₂ v) = ((inj₂ tt) , (inj₁ tt)) , refl
+
+proj₂ (ℙ-moncom-mult A E X Y) (ret x , ret y) ((i , j) , inj₂ k , inj₁ tt) = ((inj₁ tt) , tt) , refl
+proj₂ (ℙ-moncom-mult A E X Y) (ret x , ret y) ((i , j) , inj₂ k , inj₂ tt) = ((inj₁ tt) , tt) , refl
+proj₂ (ℙ-moncom-mult A E X Y) (act a l , ret x) ((inj₁ i , j) , inj₂ k , inj₁ y) = ((inj₁ y) , inj₁ tt) , refl
+proj₂ (ℙ-moncom-mult A E X Y) (err e , ret x) ((inj₁ i , j) , inj₂ k , inj₁ tt) = ((inj₁ tt) , (inj₁ tt)) , refl
+proj₂ (ℙ-moncom-mult A E X Y) (ret x , act a r) ((i , inj₁ j) , inj₂ k , inj₂ v) = (inj₂ v , inj₁ tt) , refl
+proj₂ (ℙ-moncom-mult A E X Y) (act a t , act b r) ((inj₁ i , inj₁ x) , inj₂ k , inj₁ v) = ((inj₁ v) , (inj₁ tt)) , refl
+proj₂ (ℙ-moncom-mult A E X Y) (act a t , act b r) ((inj₁ i , inj₁ x) , inj₂ k , inj₂ v) = ((inj₂ v) , (inj₁ tt)) , refl
+proj₂ (ℙ-moncom-mult A E X Y) (err e , act a r) ((inj₁ i , inj₁ j) , inj₂ k , inj₁ v) = ((inj₁ v) , (inj₁ tt)) , refl
+proj₂ (ℙ-moncom-mult A E X Y) (err e , act a r) ((inj₁ i , inj₁ j) , inj₂ k , inj₂ v) = ((inj₂ v) , (inj₁ tt)) , refl
+proj₂ (ℙ-moncom-mult A E X Y) (ret y , err e) ((x , inj₁ j) , inj₂ k , inj₂ tt) = ((inj₂ tt) , (inj₁ tt)) , refl
+proj₂ (ℙ-moncom-mult A E X Y) (act b r , err e) ((inj₁ x , inj₁ j) , inj₂ k , inj₁ v) = (inj₁ v , inj₁ tt) , refl
+proj₂ (ℙ-moncom-mult A E X Y) (act b r , err e) ((inj₁ x , inj₁ j) , inj₂ k , inj₂ v) = (inj₂ v , inj₁ tt) , refl
+proj₂ (ℙ-moncom-mult A E X Y) (err e , err f) ((inj₁ i , inj₁ j) , inj₂ k , inj₁ v) = ((inj₁ tt) , (inj₁ tt)) , refl
+proj₂ (ℙ-moncom-mult A E X Y) (err e , err f) ((inj₁ i , inj₁ j) , inj₂ k , inj₂ v) = ((inj₂ tt) , (inj₁ tt)) , refl
+proj₂ (ℙ-moncom-mult A E X Y) (r , err e) ((y , inj₂ j) , inj₂ k , v) = ((inj₂ tt) , (inj₂ tt)) , refl
+proj₂ (ℙ-moncom-mult A E X Y) (l , act a r) ((i , inj₂ j) , inj₂ k , v)
+  with proj₂ (ℙ-moncom-mult A E X Y) (l , r) ((i , j) , k , v)
+... | (u , w) , eq = ((inj₂ u) , (inj₂ w)) , (cong (act a) eq)
+
 
 
 -- Interaction law
