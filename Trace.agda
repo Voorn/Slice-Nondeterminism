@@ -70,6 +70,27 @@ PK-T A E f (ret x) = proj₁ (f x) , λ i → ret (proj₂ (f x) i)
 PK-T A E f (act a t) = Pow-act a _ (PK-T A E f t)
 PK-T A E f (err e) = PK-Id _ (err e)
 
+
+PK-T-Id :  (A E X : Set) → PK-≡ (PK-T A E (PK-Id X)) (PK-Id (Trace A E X))
+proj₁ (PK-T-Id A E X) (ret x) i = tt , refl
+proj₁ (PK-T-Id A E X) (act a t) i = tt , (cong (act a) (proj₂ (proj₁ (PK-T-Id A E X) t i)))
+proj₁ (PK-T-Id A E X) (err e) i = tt , refl
+proj₂ (PK-T-Id A E X) (ret x) i = tt , refl
+proj₂ (PK-T-Id A E X) (act a t) i = (proj₁ (proj₂ (PK-T-Id A E X) t i)) ,
+  (cong (act a) (proj₂ (proj₂ (PK-T-Id A E X) t i)))
+proj₂ (PK-T-Id A E X) (err e) i = tt , refl
+
+PK-T-∘ : (A E : Set) → {X Y Z : Set} → (f : PK-Hom X Y) → (g : PK-Hom Y Z)
+  → PK-≡ (PK-T A E (PK-∘ f g)) (PK-∘ (PK-T A E f) (PK-T A E g))
+proj₁ (PK-T-∘ A E f g) (ret x) (i , j) = (i , j) , refl
+proj₁ (PK-T-∘ A E f g) (act a t) i with proj₁ (PK-T-∘ A E f g) t i
+... | u , eq = u , (cong (act a) eq)
+proj₁ (PK-T-∘ A E f g) (err e) i = (tt , tt) , refl
+proj₂ (PK-T-∘ A E f g) (ret x) (i , j) = (i , j) , refl
+proj₂ (PK-T-∘ A E f g) (act a t) (i , j) with proj₂ (PK-T-∘ A E f g) t (i , j)
+... | u ,  eq = u , (cong (act a) eq)
+proj₂ (PK-T-∘ A E f g) (err e) (i , j) = tt , refl
+
 PK-T-Total : (A E : Set) → {X Y : Set} → (f : PK-Hom X Y)
   → (PK-Total f) → PK-Total (PK-T A E f)
 PK-T-Total A E f f-tot (ret x) = f-tot x
@@ -225,8 +246,27 @@ proj₂ (PK-T-μ-rev A E X) (err e) (inj₁ tt) = (ret (err e) , (tt , refl)) , 
 proj₂ (PK-T-μ-rev A E X) (err e) (inj₂ tt) = ((err e) , (tt , refl)) , refl
 
 
+PK-T-δ-asso : (A E X : Set) → PK-≡ (PK-∘ (PK-T-δ A E X) (PK-T-δ A E (Trace A E X)))
+                                   (PK-∘ (PK-T-δ A E X) (PK-T A E (PK-T-δ A E X)))
+proj₁ (PK-T-δ-asso A E X) (ret x) i = (tt , tt) , refl
+proj₁ (PK-T-δ-asso A E X) (act a t) (inj₁ i , j) = ((inj₁ tt) , (inj₁ tt)) , refl
+proj₁ (PK-T-δ-asso A E X) (act a t) (inj₂ i , inj₁ j) = ((inj₁ tt) , (inj₂ i)) , refl
+proj₁ (PK-T-δ-asso A E X) (act a t) (inj₂ i , inj₂ j)
+  with proj₁ (PK-T-δ-asso A E X) t (i , j)
+... | (u , v) , eq = (inj₂ u , v) , cong (act a) eq
+proj₁ (PK-T-δ-asso A E X) (err e) (inj₁ i , j) = ((inj₁ tt) , (inj₁ tt)) , refl
+proj₁ (PK-T-δ-asso A E X) (err e) (inj₂ i , inj₁ j) = ((inj₁ tt) , (inj₂ tt)) , refl
+proj₁ (PK-T-δ-asso A E X) (err e) (inj₂ i , inj₂ j) = ((inj₂ tt) , tt) , refl
 
-
+proj₂ (PK-T-δ-asso A E X) (ret x) (i , j) = (tt , tt) , refl
+proj₂ (PK-T-δ-asso A E X) (act a t) (inj₁ tt , inj₁ tt) = ((inj₁ tt) , tt) , refl
+proj₂ (PK-T-δ-asso A E X) (act a t) (inj₁ tt , inj₂ j) = ((inj₂ j) , inj₁ tt) , refl
+proj₂ (PK-T-δ-asso A E X) (act a t) (inj₂ i , j)
+  with proj₂ (PK-T-δ-asso A E X) t (i , j)
+... | (u , v) , eq = (inj₂ u , inj₂ v) , cong (act a) eq
+proj₂ (PK-T-δ-asso A E X) (err x) (inj₁ i , inj₁ tt) = ((inj₁ tt) , tt) , refl
+proj₂ (PK-T-δ-asso A E X) (err x) (inj₁ i , inj₂ tt) = ((inj₂ i) , inj₁ tt) , refl
+proj₂ (PK-T-δ-asso A E X) (err x) (inj₂ i , j) = ((inj₂ tt) , (inj₂ tt)) , refl
 
 -- Extra structure: The comomonad
 

@@ -27,6 +27,9 @@ _⊗_ : {X Y X' Y' : Set} → PK-Hom X Y → PK-Hom X' Y' → PK-Hom (X × X') (
   → PK-≡ f f' → PK-≡ g g' → PK-≡ (f ⊗ g) (f' ⊗ g')
 ⊗-≡ (f<f' , f'<f) (g<g' , g'<g) = (⊗-< f<f' g<g') , (⊗-< f'<f g'<g)
 
+⊗-≡-right : {X Y X' Y' : Set} → (f  : PK-Hom X Y) → {g g' : PK-Hom X' Y'}
+  → PK-≡ g g' → PK-≡ (f ⊗ g) (f ⊗ g')
+⊗-≡-right f g≡g' = ⊗-≡ (PK-≡-refl f) g≡g'
 
 
 ⊗-id : (X Y : Set) → PK-≡ ((PK-Id X) ⊗ (PK-Id Y)) (PK-Id (X × Y)) 
@@ -41,6 +44,19 @@ proj₁ (⊗-∘ f g f' g') (x , x') ((i , j) , (i' , j')) = ((i , i') , (j , j'
 proj₂ (⊗-∘ f g f' g') (x , x') ((i , i') , (j , j')) = ((i , j) , (i' , j')) , refl
 
 
+⊗-01-split : {X Y Z W : Set} → (f : PK-Hom X Y) → (g : PK-Hom Z W)
+  → PK-≡ (f ⊗ g) (PK-∘ (f ⊗ PK-Id _) (PK-Id _ ⊗ g))
+proj₁ (⊗-01-split f g) (x , y) (i , j) = ((i , tt) , tt , j) , refl
+proj₂ (⊗-01-split f g) (x , y) ((i , tt) , (tt , j)) = (i , j) , refl
+
+⊗-10-split : {X Y Z W : Set} → (f : PK-Hom X Y) → (g : PK-Hom Z W)
+  → PK-≡ (f ⊗ g) (PK-∘ (PK-Id _ ⊗ g) (f ⊗ PK-Id _))
+proj₁ (⊗-10-split f g) (x , y) (i , j) = ((tt , j) , (i , tt)) , refl
+proj₂ (⊗-10-split f g) (x , y) ((tt , i) , (j , tt)) = (j , i) , refl
+
+⊗-trade :  {X Y Z W : Set} → (f : PK-Hom X Y) → (g : PK-Hom Z W)
+  → PK-≡ (PK-∘ (f ⊗ PK-Id _) (PK-Id _ ⊗ g)) (PK-∘ (PK-Id _ ⊗ g) (f ⊗ PK-Id _))
+⊗-trade f g = PK-≡-trans (PK-≡-sym (⊗-01-split f g)) (⊗-10-split f g)
 
 ⊗-γ : (X Y : Set) → PK-Hom (X × Y) (Y × X)
 ⊗-γ X Y (x , y) = PK-Id _ (y , x)

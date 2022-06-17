@@ -64,6 +64,7 @@ PK-Hom X Y = X → Pow Y
 PK-≡ : {X Y : Set} → Rel₁ (PK-Hom X Y) (PK-Hom X Y)
 PK-≡ f g = Pow-< f g × Pow-< g f
 
+
 PK-≡-refl : {X Y : Set} → (f : PK-Hom X Y) → PK-≡ f f
 PK-≡-refl f = Pow-refl f , Pow-refl f
 
@@ -85,7 +86,8 @@ Pow-κ X Y f (I , a) = (Σ I λ i → proj₁ (f (a i))) ,
 PK-∘ : {X Y Z : Set} → PK-Hom X Y → PK-Hom Y Z → PK-Hom X Z
 PK-∘ {X} {Y} {Z} f g x = Pow-κ Y Z g (f x)
 
-
+abstract
+  PKA-∘ = PK-∘
 
 PK-luni : {X Y : Set} → (f : PK-Hom X Y) → PK-≡ (PK-∘ (PK-Id X) f) f
 proj₁ (PK-luni f) x (tt , j) = j , refl
