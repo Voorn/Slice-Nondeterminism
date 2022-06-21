@@ -14,6 +14,11 @@ open import Free-Monad
 open import Trace
 
 
+
+
+cur : {X Y : Set} → {Z : Set₁} → (X → Y → Z) → (X × Y → Z)
+cur f (x , y) = f x y
+
 -- Trace Runners
 Trace-⊥-dec : (A E X : Set) → (Trace A E ⊥) → (Trace A E X)
 Trace-⊥-dec A E X (act a t) = act a (Trace-⊥-dec A E X t)
@@ -32,11 +37,62 @@ proj₂ (Trace-⊥-nat A E f) (act a t) (tt , j) with proj₂ (Trace-⊥-nat A E
 ... | tt , v = tt , (cong (act a) v)
 proj₂ (Trace-⊥-nat A E f) (err e) (tt , tt) = tt , refl
 
+
+--
+Runner-map : (A E B F K : Set) → Set₁
+Runner-map A E B F K = (X : Set) → K → PK-Hom (Trace A E X) (Trace B F (K × X))
+
+Runner-map-Total : {A E A' E' : Set} → (K : Set) → (Runner-map A E A' E' K) → Set₁
+Runner-map-Total K ϕ = (X : Set) → (k : K) → PK-Total (ϕ X k)
+
+Runner-map-T-nat : {A E A' E' : Set} → (K : Set) → (Runner-map A E A' E' K) → Set₁
+Runner-map-T-nat K ϕ = {X Y : Set} → (f : PK-Hom X Y) → PK-Total f → (k : K)
+  → PK-≡ (PK-∘ (PK-T _ _ f) (ϕ Y k))
+          (PK-∘ (ϕ X k) (PK-T _ _ (PK-Id K ⊗ f)))
+
+Runner-map-S-nat : {A E A' E' : Set} → (K : Set) → (Runner-map A E A' E' K) → Set₁
+Runner-map-S-nat K ϕ = {X Y : Set} → (f : X → Y) → (k : K)
+  → PK-≡ (λ t → (ϕ Y k (Trace-map _ _ f t)))
+         (λ t → Pow→ (Trace-map _ _ (λ p → proj₁ p , f (proj₂ p))) (ϕ X k t))
+
+Runner-map-η : {A E A' E' : Set} → (K : Set) → (Runner-map A E A' E' K) → Set₁
+Runner-map-η K ϕ = (X : Set) → (k : K)
+  → PK-≡ (PK-∘ (PK-T-η _ _ X) (ϕ X k))
+         (PK-∘ (PK-Fun (λ x → (k , x))) (PK-T-η _ _ (K × X)))
+
+Runner-map-μ : {A E A' E' : Set} → (K : Set) → (Runner-map A E A' E' K) → Set₁
+Runner-map-μ K ϕ = (X : Set) → (k : K)
+  → PK-≡ (PK-∘ (PK-T-μ _ _ X) (ϕ X k))
+         (PK-∘ (ϕ (Trace _ _ X) k)
+               (PK-∘ (PK-T _ _ (cur (ϕ X))) (PK-T-μ _ _ (K × X))))
+
+
+
+
+
+Runner-map-trans : {A E : Set} → (K : Set) → (Runner-map A E ⊥ ⊤ K) → Set₁
+Runner-map-trans K ϕ = {X Y : Set} → (f : X → Y) → (k : K) → (t : Trace _ _ X)
+  → Σ (proj₁ (ϕ X k t) → proj₁ (ϕ Y k (Trace-map _ _ f t)))
+    λ π → (i : proj₁ (ϕ X k t)) → (u : K) → (x : X) → proj₂ (ϕ X k t) i ≡ ret (u , x)
+    → proj₂ (ϕ Y k (Trace-map _ _ f t)) (π i) ≡ ret (u , f x)
+
+Runner-map-trans2 : {A E : Set} → (K : Set) → (Runner-map A E ⊥ ⊤ K) → Set₁
+Runner-map-trans2 K ϕ = {X Y : Set} → (f : X → Y) → (k : K) → (t : Trace _ _ X)
+  → Σ (proj₁ (ϕ Y k (Trace-map _ _ f t)) → proj₁ (ϕ X k t))
+    λ π → (i : proj₁ (ϕ Y k (Trace-map _ _ f t)))
+    → (u : K) → (y : Y) → proj₂ (ϕ Y k (Trace-map _ _ f t)) i ≡ ret (u , y)
+    → Σ X λ x → f x ≡ y × proj₂ (ϕ X k t) (π i) ≡ ret (u , x)
+
+
+
+
+
 Trace-Runner : (A E B F K : Set) → Set₁
 Trace-Runner A E B F K = (A → PK-Hom K (Trace B F K)) × (E → PK-Hom K (Trace B F ⊥))
 
 TR-Total : {A E B F K : Set} → Trace-Runner A E B F K → Set
 TR-Total (θ₁ , θ₂) = ((a : _) → PK-Total (θ₁ a)) × ((e : _) → PK-Total (θ₂ e))
+
 
 TR-map : {A E B F : Set} → (K : Set) → (θ : Trace-Runner A E B F K)
   → (X : Set) → K → PK-Hom (Trace A E X) (Trace B F (K × X))
@@ -52,7 +108,7 @@ TR-map-act K θ X (err e) t = PK-Id _ (err e)
 
 
 TR-map-Total : {A E B F : Set} → (K : Set) → (θ : Trace-Runner A E B F K)
-  → TR-Total θ → (X : Set) → (k : K) → PK-Total (TR-map K θ X k)
+  → TR-Total θ → Runner-map-Total K (TR-map K θ)
 TR-map-act-Total : {A E B F : Set} → (K : Set) → (θ : Trace-Runner A E B F K)
   → TR-Total θ → (X : Set) → (r : Trace B F K) → PK-Total (TR-map-act K θ X r)
 TR-map-Total K θ θ-tot X k (ret x) = tt
@@ -111,16 +167,29 @@ TR-map-T-nat>-act K θ f f-tot (act a r) t (i , j)
 TR-map-T-nat>-act K θ f f-tot (err e) t (tt , tt) = (PK-T-Total _ _ f f-tot t , tt) , refl
 
 
+TR-map-T-nat : {A E B F : Set} → (K : Set) → (θ : Trace-Runner A E B F K)
+  → TR-Total θ → Runner-map-T-nat K (TR-map K θ)
+TR-map-T-nat K θ θ-tot f f-tot k = TR-map-nat< K θ f k , TR-map-T-nat> K θ f f-tot k
+
+
+-- transports
+
+--TR-map-trans : {A E : Set} → (K : Set) → (θ : Trace-Runner A E ⊥ ⊤ K)
+--  → Runner-map-trans K (TR-map K θ)
+--proj₁ (TR-map-trans K θ f k (ret x)) i = tt
+--proj₁ (TR-map-trans K θ f k (act a t)) (i , j) = i , {!proj₁ (TR-map-trans K θ f k t) !}
+--proj₁ (TR-map-trans K θ f k (err e)) i = {!!}
+--proj₂ (TR-map-trans K θ f k t) = {!!}
+
+
+
+
 TR-map-η : {A E A' E' : Set} → (K : Set) → (θ : Trace-Runner A E A' E' K)
-  → (X : Set) → (k : K)
-  → PK-≡ (PK-∘ (PK-T-η A E X) (TR-map K θ X k))
-         (PK-∘ (PK-Fun (λ x → (k , x))) (PK-T-η A' E' (K × X)))
+  → Runner-map-η K (TR-map K θ)
 proj₁ (TR-map-η S θ X s) x i = (tt , tt) , refl
 proj₂ (TR-map-η S θ X s) x i = (tt , tt) , refl
 
 
-cur : {X Y : Set} → {Z : Set₁} → (X → Y → Z) → (X × Y → Z)
-cur f (x , y) = f x y
 
 
 Trace-⊥-μ : (A E X : Set) → (t : Trace A E ⊥)
@@ -131,10 +200,7 @@ Trace-⊥-μ A E X (err e) = refl
 
 
 TR-map-μ : {A E A' E' : Set} → (K : Set) → (θ : Trace-Runner A E A' E' K)
-  → (X : Set) → (k : K)
-  → PK-≡ (PK-∘ (PK-T-μ A E X) (TR-map K θ X k))
-         (PK-∘ (TR-map K θ (Trace A E X) k)
-               (PK-∘ (PK-T A' E' (cur (TR-map K θ X))) (PK-T-μ A' E' (K × X))))
+  → Runner-map-μ K (TR-map K θ)
 TR-map-act-μ : {A E A' E' : Set} → (K : Set) → (θ : Trace-Runner A E A' E' K)
   → (X : Set) → (r : Trace A' E' K)
   → PK-≡ (PK-∘ (PK-T-μ A E X) (TR-map-act K θ X r))

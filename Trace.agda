@@ -30,6 +30,10 @@ Trace-μ A E X (ret t) = t
 Trace-μ A E X (act a d) = act a (Trace-μ A E X d)
 Trace-μ A E X (err e) = err e
 
+Trace-κ : (A E X Y : Set) → (X → Trace A E Y) → (Trace A E X → Trace A E Y)
+Trace-κ A E X Y f (ret x) = f x
+Trace-κ A E X Y f (act a t) = act a (Trace-κ A E X Y f t)
+Trace-κ A E X Y f (err e) = err e
 
 
 Trace-σ : (A E X Y : Set) → X × Trace A E Y → Trace A E (X × Y)
@@ -45,6 +49,11 @@ Trace-ex (err e) = inj₁ e
 Trace-b : (A : Set) → {E X : Set} → E ⊎ X → Trace A E X
 Trace-b A (inj₁ e) = err e
 Trace-b A (inj₂ x) = ret x
+
+Trace-map : (A E : Set) → {X Y : Set} → (X → Y) → Trace A E X → Trace A E Y
+Trace-map A E f (ret x) = ret (f x)
+Trace-map A E f (act a t) = act a (Trace-map A E f t)
+Trace-map A E f (err e) = err e
 
 
 --PK-T : (A E : Set) → {X Y : Set} → PK-Hom X Y → PK-Hom (Trace A E X) (Trace A E Y)
