@@ -1,4 +1,4 @@
-module State-Machine where
+module Runner.State-Machine where
 
 open import Data.Unit
 open import Data.Empty
@@ -10,10 +10,9 @@ open import Relation.Binary.PropositionalEquality hiding ([_])
 
 open import Index-Nondeterminism
 open import Monoidal
-open import Free-Monad
-open import Trace
+open import Monads.Trace
 
-open import Trace-Runner
+open import Runner.Trace-Runner
 
 
 

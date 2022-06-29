@@ -1,4 +1,4 @@
-module Free-Monad where
+module Monads.Free-Monad where
 
 open import Data.Unit
 open import Data.Empty

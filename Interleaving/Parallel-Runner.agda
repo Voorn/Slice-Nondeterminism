@@ -10,14 +10,13 @@ open import Relation.Binary.PropositionalEquality hiding ([_])
 
 open import Index-Nondeterminism
 open import Monoidal
-open import Free-Monad
-open import Trace
+open import Monads.Trace
 
 open import Interleaving.Parallel
 open import Interleaving.Parallel-Monoidal
 
 
-
+-- Parallel runner
 
 ρ-runner : (A E K : Set) → (X : Set) → PK-Hom (Trace A E X × Trace A E K)
                                               (Trace A E (X × Trace A E K))

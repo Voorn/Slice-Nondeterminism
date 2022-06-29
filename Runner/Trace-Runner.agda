@@ -1,4 +1,4 @@
-module Trace-Runner where
+module Runner.Trace-Runner where
 
 open import Data.Unit
 open import Data.Empty
@@ -10,8 +10,8 @@ open import Relation.Binary.PropositionalEquality hiding ([_])
 
 open import Index-Nondeterminism
 open import Monoidal
-open import Free-Monad
-open import Trace
+
+open import Monads.Trace
 
 
 
@@ -19,7 +19,7 @@ open import Trace
 cur : {X Y : Set} → {Z : Set₁} → (X → Y → Z) → (X × Y → Z)
 cur f (x , y) = f x y
 
--- Trace Runners
+
 Trace-⊥-dec : (A E X : Set) → (Trace A E ⊥) → (Trace A E X)
 Trace-⊥-dec A E X (act a t) = act a (Trace-⊥-dec A E X t)
 Trace-⊥-dec A E X (err e) = err e
@@ -38,7 +38,7 @@ proj₂ (Trace-⊥-nat A E f) (act a t) (tt , j) with proj₂ (Trace-⊥-nat A E
 proj₂ (Trace-⊥-nat A E f) (err e) (tt , tt) = tt , refl
 
 
---
+-- Trace runner and its properties
 Runner-map : (A E B F K : Set) → Set₁
 Runner-map A E B F K = (X : Set) → K → PK-Hom (Trace A E X) (Trace B F (K × X))
 
@@ -66,7 +66,13 @@ Runner-map-μ K ϕ = (X : Set) → (k : K)
          (PK-∘ (ϕ (Trace _ _ X) k)
                (PK-∘ (PK-T _ _ (cur (ϕ X))) (PK-T-μ _ _ (K × X))))
 
-
+Runner-map-κ : {A E A' E' : Set} → (K : Set) → (Runner-map A E A' E' K) → Set₁
+Runner-map-κ K ϕ = (X Y : Set) → (t : Trace _ _ X) → (f : X → Trace _ _ Y)
+  → (k : K)
+  → Pow-Γ≡ (Trace _ _ (K × Y)) (ϕ Y k (Trace-κ _ _ X Y f t))
+           (Pow-κ (Trace _ _ (K × X)) (Trace _ _ (K × Y))
+                  (PK-T-κ (K × X) (K × Y) (λ p → cur (ϕ Y) (proj₁ p , f (proj₂ p))))
+                                          (ϕ X k t))
 
 
 
@@ -86,7 +92,7 @@ Runner-map-trans2 K ϕ = {X Y : Set} → (f : X → Y) → (k : K) → (t : Trac
 
 
 
-
+-- Local definition of a runner
 Trace-Runner : (A E B F K : Set) → Set₁
 Trace-Runner A E B F K = (A → PK-Hom K (Trace B F K)) × (E → PK-Hom K (Trace B F ⊥))
 
@@ -172,17 +178,6 @@ TR-map-T-nat : {A E B F : Set} → (K : Set) → (θ : Trace-Runner A E B F K)
 TR-map-T-nat K θ θ-tot f f-tot k = TR-map-nat< K θ f k , TR-map-T-nat> K θ f f-tot k
 
 
--- transports
-
---TR-map-trans : {A E : Set} → (K : Set) → (θ : Trace-Runner A E ⊥ ⊤ K)
---  → Runner-map-trans K (TR-map K θ)
---proj₁ (TR-map-trans K θ f k (ret x)) i = tt
---proj₁ (TR-map-trans K θ f k (act a t)) (i , j) = i , {!proj₁ (TR-map-trans K θ f k t) !}
---proj₁ (TR-map-trans K θ f k (err e)) i = {!!}
---proj₂ (TR-map-trans K θ f k t) = {!!}
-
-
-
 
 TR-map-η : {A E A' E' : Set} → (K : Set) → (θ : Trace-Runner A E A' E' K)
   → Runner-map-η K (TR-map K θ)
@@ -241,6 +236,8 @@ proj₂ (TR-map-act-μ K θ X (err e)) d i = (tt , tt) , refl
 
 
 
+
+-- Local definition
 
 TR-map-extract : {A E A' E' : Set} → (K : Set)
   → ((X : Set) → K → PK-Hom (Trace A E X) (Trace A' E' (K × X))) → Trace-Runner A E A' E' K
@@ -311,7 +308,7 @@ proj₂ (proj₂ (TR-map-bij-1 K θ) e) k i = ((i , tt) , belp' K θ (proj₂ (p
   sym (proj₂ (belp K θ (proj₂ (proj₂ θ e k) i) (belp' K θ (proj₂ (proj₂ θ e k) i))))
 
 
--- Category of trace runners
+-- Composition of trace runners
 TR-∘ : {A₀ E₀ A₁ E₁ A₂ E₂ : Set} → (K K' : Set)
   → Trace-Runner A₀ E₀ A₁ E₁ K → Trace-Runner A₁ E₁ A₂ E₂ K'
   → Trace-Runner A₀ E₀ A₂ E₂ (K' × K) 

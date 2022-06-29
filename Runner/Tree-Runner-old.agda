@@ -1,4 +1,4 @@
-module Runner where
+module Runner.Tree-Runner-old where
 
 open import Data.Unit
 open import Data.Empty
@@ -9,8 +9,9 @@ open import Relation.Binary.PropositionalEquality hiding ([_])
 
 
 open import Index-Nondeterminism
-open import Free-Monad
 open import Monoidal
+
+open import Monads.Free-Monad
 
 
 -- State Monad
@@ -67,35 +68,36 @@ R-map-cur S M ϕ X m (node σ ts) =
 R-map :  (S : Sig) → (M : Set) → Runner S M → (X : Set) → PK-Hom ((Free S X) × M) (X × M)
 R-map S M ϕ X (t , m) = R-map-cur S M ϕ X m t
 
-R-map-snat-cur : (S : Sig) → (M : Set) → (ϕ : Runner S M) → {X Y : Set} → (f : X → Y)
-  → (m : M)
-  → PK-≡ (PK-∘ (PK-F S (PK-Fun f)) (R-map-cur S M ϕ Y m))
-         (PK-∘ (R-map-cur S M ϕ X m) ((PK-Fun f) ⊗ PK-Id _))
-proj₁ (R-map-snat-cur S M ϕ f m) (leaf x) (tt , tt) = (tt , (tt , tt)) , refl
-proj₁ (R-map-snat-cur S M ϕ f m) (node σ ts) (i , j , k)
-  with proj₁ (R-map-snat-cur S M ϕ f (proj₂ (proj₂ (ϕ σ m) j)))
-       (ts (proj₁ (proj₂ (ϕ σ m) j))) (i (proj₁ (proj₂ (ϕ σ m) j)) , k)
-... | (u , v , tt) , eq = ((j , u) , (v , tt)) , eq
-proj₂ (R-map-snat-cur S M ϕ f m) (leaf x) (i , tt , tt) = (tt , tt) , refl
-proj₁ (proj₁ (proj₂ (R-map-snat-cur S M ϕ f m) (node σ ts) (i , tt , tt))) =
-  (λ c → Pos-In S _ (λ x → ⊤) (ts c) (λ x → tt))
-proj₂ (proj₁ (proj₂ (R-map-snat-cur S M ϕ f m) (node σ ts) (i , tt , tt))) = (proj₁ i) ,
-  {!proj₂ (proj₁ (proj₂ (R-map-snat-cur S M ϕ f (proj₂ (proj₂ (ϕ σ m) (proj₁ i)))) (ts (proj₁ (proj₂ (ϕ σ m) (proj₁ i)))) (proj₂ i , tt , tt)))!}
 
-R-map-nat-cur : (S : Sig) → (M : Set) → (ϕ : Runner S M) → {X Y : Set} → (f : PK-Hom X Y)
-  → (m : M)
-  → PK-≡ (PK-∘ (PK-F S f) (R-map-cur S M ϕ Y m)) (PK-∘ (R-map-cur S M ϕ X m) (f ⊗ PK-Id _))
-proj₁ (R-map-nat-cur S M ϕ f m) (leaf x) (i , tt) = (tt , (i , tt)) , refl
-proj₁ (R-map-nat-cur S M ϕ f m) (node σ ts) (i , j , k)
-  with proj₁ (R-map-nat-cur S M ϕ f (proj₂ (proj₂ (ϕ σ m) j))) (ts (proj₁ (proj₂ (ϕ σ m) j)))
-  ((i (proj₁ (proj₂ (ϕ σ m) j))) , k)
-... | (u , v , tt) , eq = ((j , u) , (v , tt)) , eq
-proj₂ (R-map-nat-cur S M ϕ f m) (leaf x) (tt , i , tt) = (i , tt) , refl
-proj₂ (R-map-nat-cur S M ϕ f m) (node σ ts) ((i , j) , k , tt)
-      = ((λ c → proj₁ (proj₁ (proj₂ (R-map-nat-cur S M ϕ f m) (ts c) ({!j!} , {!!})))) , {!!}) , {!!}
+-- R-map-snat-cur : (S : Sig) → (M : Set) → (ϕ : Runner S M) → {X Y : Set} → (f : X → Y)
+--   → (m : M)
+--   → PK-≡ (PK-∘ (PK-F S (PK-Fun f)) (R-map-cur S M ϕ Y m))
+--          (PK-∘ (R-map-cur S M ϕ X m) ((PK-Fun f) ⊗ PK-Id _))
+-- proj₁ (R-map-snat-cur S M ϕ f m) (leaf x) (tt , tt) = (tt , (tt , tt)) , refl
+-- proj₁ (R-map-snat-cur S M ϕ f m) (node σ ts) (i , j , k)
+--   with proj₁ (R-map-snat-cur S M ϕ f (proj₂ (proj₂ (ϕ σ m) j)))
+--        (ts (proj₁ (proj₂ (ϕ σ m) j))) (i (proj₁ (proj₂ (ϕ σ m) j)) , k)
+-- ... | (u , v , tt) , eq = ((j , u) , (v , tt)) , eq
+-- proj₂ (R-map-snat-cur S M ϕ f m) (leaf x) (i , tt , tt) = (tt , tt) , refl
+-- proj₁ (proj₁ (proj₂ (R-map-snat-cur S M ϕ f m) (node σ ts) (i , tt , tt))) =
+--   (λ c → Pos-In S _ (λ x → ⊤) (ts c) (λ x → tt))
+-- proj₂ (proj₁ (proj₂ (R-map-snat-cur S M ϕ f m) (node σ ts) (i , tt , tt))) = (proj₁ i) ,
+--   {!proj₂ (proj₁ (proj₂ (R-map-snat-cur S M ϕ f (proj₂ (proj₂ (ϕ σ m) (proj₁ i)))) (ts (proj₁ (proj₂ (ϕ σ m) (proj₁ i)))) (proj₂ i , tt , tt)))!}
 
-R-map-nat : (S : Sig) → (M : Set) → (ϕ : Runner S M) → {X Y : Set} → (f : PK-Hom X Y)
-  → PK-≡ (PK-∘ ((PK-F S f) ⊗ PK-Id _) (R-map S M ϕ Y)) (PK-∘ (R-map S M ϕ X) (f ⊗ PK-Id _))
+-- R-map-nat-cur : (S : Sig) → (M : Set) → (ϕ : Runner S M) → {X Y : Set} → (f : PK-Hom X Y)
+--   → (m : M)
+--   → PK-≡ (PK-∘ (PK-F S f) (R-map-cur S M ϕ Y m)) (PK-∘ (R-map-cur S M ϕ X m) (f ⊗ PK-Id _))
+-- proj₁ (R-map-nat-cur S M ϕ f m) (leaf x) (i , tt) = (tt , (i , tt)) , refl
+-- proj₁ (R-map-nat-cur S M ϕ f m) (node σ ts) (i , j , k)
+--   with proj₁ (R-map-nat-cur S M ϕ f (proj₂ (proj₂ (ϕ σ m) j))) (ts (proj₁ (proj₂ (ϕ σ m) j)))
+--   ((i (proj₁ (proj₂ (ϕ σ m) j))) , k)
+-- ... | (u , v , tt) , eq = ((j , u) , (v , tt)) , eq
+-- proj₂ (R-map-nat-cur S M ϕ f m) (leaf x) (tt , i , tt) = (i , tt) , refl
+-- proj₂ (R-map-nat-cur S M ϕ f m) (node σ ts) ((i , j) , k , tt)
+--       = ((λ c → proj₁ (proj₁ (proj₂ (R-map-nat-cur S M ϕ f m) (ts c) ({!j!} , {!!})))) , {!!}) , {!!}
+
+-- R-map-nat : (S : Sig) → (M : Set) → (ϕ : Runner S M) → {X Y : Set} → (f : PK-Hom X Y)
+--   → PK-≡ (PK-∘ ((PK-F S f) ⊗ PK-Id _) (R-map S M ϕ Y)) (PK-∘ (R-map S M ϕ X) (f ⊗ PK-Id _))
 
 
 R-map-η : (S : Sig) → (M : Set) → (ϕ : Runner S M) → (X : Set)

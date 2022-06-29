@@ -10,8 +10,7 @@ open import Relation.Binary.PropositionalEquality hiding ([_])
 
 open import Index-Nondeterminism
 open import Monoidal
-open import Free-Monad
-open import Trace
+open import Monads.Trace
 
 
 

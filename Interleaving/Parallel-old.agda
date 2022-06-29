@@ -1,4 +1,4 @@
-module Parallel where
+module Interleaving.Parallel-old where
 
 open import Data.Unit
 open import Data.Empty
@@ -10,8 +10,7 @@ open import Relation.Binary.PropositionalEquality hiding ([_])
 
 open import Index-Nondeterminism
 open import Monoidal
-open import Free-Monad
-open import Trace-Monad
+open import Monads.Trace-old
 
 
 

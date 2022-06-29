@@ -1,4 +1,4 @@
-module Trace-Monad where
+module Monads.Trace-old where
 
 open import Data.Unit
 open import Data.Empty
@@ -10,10 +10,6 @@ open import Relation.Binary.PropositionalEquality hiding ([_])
 
 open import Index-Nondeterminism
 open import Monoidal
-open import Free-Monad
-
-SigT : Set → Sig
-SigT A = A , (λ x → ⊤)
 
 
 

@@ -10,14 +10,13 @@ open import Relation.Binary.PropositionalEquality hiding ([_])
 
 open import Index-Nondeterminism
 open import Monoidal
-open import Free-Monad
-open import Trace
+open import Monads.Trace
 
 open import Interleaving.Parallel
 
 
 
--- Pseudomonoidal
+-- Pseudomonoidal monad
 ℙ-monoid-unit : (A E X Y : Set) → PK-≡ (PK-∘ (PK-T-η A E X ⊗ PK-T-η A E Y) (ℙ A E X Y))
                                              (PK-T-η A E (X × Y))
 ℙ-monoid-unit A E X Y = (λ { p (i , inj₁ tt) → tt , refl ; p (i , inj₂ tt) → tt , refl}) ,
@@ -190,7 +189,7 @@ proj₂ (ℙ-moncom-unit A E X Y) (ret x , ret y) (i , j) = ((inj₁ tt) , tt) ,
 
 
 
--- Interaction law
+-- Interaction law equations
 IL-unit-𝕃 : (A E X Y : Set) → PK-≡ (PK-∘ (PK-T-η A E X ⊗ PK-Id _) (𝕃 A E X Y))
                                    (PK-∘ (PK-Id _ ⊗ PK-T-ε A E Y) (PK-T-η A E _))
 proj₁ (IL-unit-𝕃 A E X Y) (x , ret y) i = ((tt , tt) , tt) , refl
