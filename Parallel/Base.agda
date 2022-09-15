@@ -1,4 +1,4 @@
-module Interleaving.Parallel where
+module Parallel.Base where
 
 open import Data.Unit
 open import Data.Empty
@@ -8,8 +8,12 @@ open import Data.Product renaming (map to map×)
 open import Relation.Binary.PropositionalEquality hiding ([_])
 
 
-open import Index-Nondeterminism
-open import Monoidal
+open import Slice.Lattice
+
+open import Slice-Functions.Base
+open import Slice-Functions.Subcategories
+open import Slice-Functions.Monoidal
+
 open import Monads.Trace
 
 
@@ -17,31 +21,31 @@ open import Monads.Trace
 
 -- Paralel operator
 ℙ : (A E : Set) → (X Y : Set)
-  → PK-Hom ((Trace A E X) × (Trace A E Y)) (Trace A E (X × Y))
+  → SF ((Trace A E X) × (Trace A E Y)) (Trace A E (X × Y))
 
 𝕃 : (A E : Set) → (X Y : Set)
-  → PK-Hom ((Trace A E X) × (Trace A E Y)) (Trace A E (X × Y))
+  → SF ((Trace A E X) × (Trace A E Y)) (Trace A E (X × Y))
 
 ℝ : (A E : Set) → (X Y : Set)
-  → PK-Hom ((Trace A E X) × (Trace A E Y)) (Trace A E (X × Y))
+  → SF ((Trace A E X) × (Trace A E Y)) (Trace A E (X × Y))
 
 ℙ A E X Y p = join (𝕃 A E X Y p) (ℝ A E X Y p)
 
-𝕃 A E X Y (ret x , ret y) = PK-Id _ (ret (x , y))
-𝕃 A E X Y (ret x , act b r) = Pow-⊥ _
-𝕃 A E X Y (ret x , err e) = Pow-⊥ _
-𝕃 A E X Y (act a l , r) = Pow-act a (X × Y) (ℙ A E X Y (l , r))
-𝕃 A E X Y (err e , r) = PK-Id _ (err e)
+𝕃 A E X Y (ret x , ret y) = SF-id _ (ret (x , y))
+𝕃 A E X Y (ret x , act b r) = SL-⊥ _
+𝕃 A E X Y (ret x , err e) = SL-⊥ _
+𝕃 A E X Y (act a l , r) = SL-act a (X × Y) (ℙ A E X Y (l , r))
+𝕃 A E X Y (err e , r) = SF-id _ (err e)
 
 
-ℝ A E X Y (l , act b r) = Pow-act b (X × Y) (ℙ A E X Y (l , r))
-ℝ A E X Y (l , err e) = PK-Id _ (err e)
-ℝ A E X Y (ret x , ret y) = PK-Id _ (ret (x , y))
-ℝ A E X Y (act a l , ret y) = Pow-⊥ _
-ℝ A E X Y (err e , ret y) = Pow-⊥ _
+ℝ A E X Y (l , act b r) = SL-act b (X × Y) (ℙ A E X Y (l , r))
+ℝ A E X Y (l , err e) = SF-id _ (err e)
+ℝ A E X Y (ret x , ret y) = SF-id _ (ret (x , y))
+ℝ A E X Y (act a l , ret y) = SL-⊥ _
+ℝ A E X Y (err e , ret y) = SL-⊥ _
 
 
-ℙ-Total : (A E X Y : Set) → PK-Total (ℙ A E X Y)
+ℙ-Total : (A E X Y : Set) → SF-Total (ℙ A E X Y)
 ℙ-Total A E X Y (ret x , ret y) = inj₁ tt
 ℙ-Total A E X Y (ret x , act a r) = inj₂ (ℙ-Total A E X Y (ret x , r))
 ℙ-Total A E X Y (ret x , err e) = inj₂ tt
@@ -50,15 +54,15 @@ open import Monads.Trace
 
 
 -- < holds without totality, > needs totality
-ℙ-T-nat : (A E : Set) → {X X' Y Y' : Set} → (f : PK-Hom X X') → (g : PK-Hom Y Y')
-  → PK-Total f → PK-Total g → PK-≡ (PK-∘ (PK-T A E f ⊗ PK-T A E g) (ℙ A E X' Y'))
-                                   (PK-∘ (ℙ A E X Y) (PK-T A E (f ⊗ g)))
-𝕃-T-nat : (A E : Set) → {X X' Y Y' : Set} → (f : PK-Hom X X') → (g : PK-Hom Y Y')
-  → PK-Total f → PK-Total g → PK-≡ (PK-∘ (PK-T A E f ⊗ PK-T A E g) (𝕃 A E X' Y'))
-                                   (PK-∘ (𝕃 A E X Y) (PK-T A E (f ⊗ g)))
-ℝ-T-nat : (A E : Set) → {X X' Y Y' : Set} → (f : PK-Hom X X') → (g : PK-Hom Y Y')
-  → PK-Total f → PK-Total g → PK-≡ (PK-∘ (PK-T A E f ⊗ PK-T A E g) (ℝ A E X' Y'))
-                                   (PK-∘ (ℝ A E X Y) (PK-T A E (f ⊗ g)))
+ℙ-T-nat : (A E : Set) → {X X' Y Y' : Set} → (f : SF X X') → (g : SF Y Y')
+  → SF-Total f → SF-Total g → SF≡ (SF-∘ (SF-T A E f ⊗ SF-T A E g) (ℙ A E X' Y'))
+                                   (SF-∘ (ℙ A E X Y) (SF-T A E (f ⊗ g)))
+𝕃-T-nat : (A E : Set) → {X X' Y Y' : Set} → (f : SF X X') → (g : SF Y Y')
+  → SF-Total f → SF-Total g → SF≡ (SF-∘ (SF-T A E f ⊗ SF-T A E g) (𝕃 A E X' Y'))
+                                   (SF-∘ (𝕃 A E X Y) (SF-T A E (f ⊗ g)))
+ℝ-T-nat : (A E : Set) → {X X' Y Y' : Set} → (f : SF X X') → (g : SF Y Y')
+  → SF-Total f → SF-Total g → SF≡ (SF-∘ (SF-T A E f ⊗ SF-T A E g) (ℝ A E X' Y'))
+                                   (SF-∘ (ℝ A E X Y) (SF-T A E (f ⊗ g)))
 
 proj₁ (ℙ-T-nat A E f g f-tot g-tot) (l , r) (i , inj₁ j)
   with proj₁ (𝕃-T-nat A E f g f-tot g-tot) (l , r) (i , j)
@@ -83,7 +87,7 @@ proj₂ (𝕃-T-nat A E f g f-tot g-tot) (act a l , r) (i , j)
   with proj₂ (ℙ-T-nat A E f g f-tot g-tot) (l , r) (i , j)
 ... | u , eq = u , (cong (act a) eq)
 proj₂ (𝕃-T-nat A E f g f-tot g-tot) (err e , r) (i , j) =
-  ((tt , (PK-T-Total A E g g-tot r)) , tt) , refl
+  ((tt , (SF-T-Total A E g g-tot r)) , tt) , refl
 
 proj₁ (ℝ-T-nat A E f g f-tot g-tot) (l , act a r) ((i , j) , p)
   with proj₁ (ℙ-T-nat A E f g f-tot g-tot) (l , r) ((i , j) , p)
@@ -95,30 +99,30 @@ proj₂ (ℝ-T-nat A E f g f-tot g-tot) (l , act a r) (i , j)
   with proj₂ (ℙ-T-nat A E f g f-tot g-tot) (l , r) (i , j)
 ... | u , eq = u , (cong (act a) eq)
 proj₂ (ℝ-T-nat A E f g f-tot g-tot) (l , err e) (i , j) =
-  ((PK-T-Total A E f f-tot l , tt) , tt) , refl
+  ((SF-T-Total A E f f-tot l , tt) , tt) , refl
 proj₂ (ℝ-T-nat A E f g f-tot g-tot) (ret x , ret y) (i , j) = (j , tt) , refl
 
-𝕃-T-nat-left : (A E Y : Set) → {X X' : Set} → (f : PK-Hom X X') 
-  → PK-Total f → PK-≡ (PK-∘ (PK-T A E f ⊗ PK-Id _) (𝕃 A E X' Y))
-                            (PK-∘ (𝕃 A E X Y) (PK-T A E (f ⊗ PK-Id _)))
-𝕃-T-nat-left A E Y f f-tot = PK-≡-trans
-  (PK-∘-l≡ (PK-T A E f ⊗ PK-Id _) (PK-T A E f ⊗ (PK-T A E (PK-Id _))) (𝕃 A E _ _)
-           (⊗-≡ (PK-≡-refl (PK-T A E f)) (PK-≡-sym (PK-T-Id A E Y))))
-  (𝕃-T-nat A E f (PK-Id _) f-tot λ x → tt)
+𝕃-T-nat-left : (A E Y : Set) → {X X' : Set} → (f : SF X X') 
+  → SF-Total f → SF≡ (SF-∘ (SF-T A E f ⊗ SF-id _) (𝕃 A E X' Y))
+                            (SF-∘ (𝕃 A E X Y) (SF-T A E (f ⊗ SF-id _)))
+𝕃-T-nat-left A E Y f f-tot = SF≡-Tran _ _ _
+  (SF-∘-l≡ (SF-T A E f ⊗ SF-id _) (SF-T A E f ⊗ (SF-T A E (SF-id _))) (𝕃 A E _ _)
+           (⊗-≡ (SF≡-Refl (SF-T A E f)) (SF≡-Symm _ _ (SF-T-Id A E Y))))
+  (𝕃-T-nat A E f (SF-id _) f-tot λ x → tt)
 
-𝕃-T-nat-right : (A E X : Set) → {Y Y' : Set} → (f : PK-Hom Y Y') 
-  → PK-Total f → PK-≡ (PK-∘ (PK-Id _ ⊗ PK-T A E f) (𝕃 A E X Y'))
-                            (PK-∘ (𝕃 A E X Y) (PK-T A E (PK-Id _ ⊗ f)))
-𝕃-T-nat-right A E Y f f-tot = PK-≡-trans
-  (PK-∘-l≡ (PK-Id _ ⊗ PK-T A E f) ((PK-T A E (PK-Id _)) ⊗ (PK-T A E f)) (𝕃 A E _ _)
-           (⊗-≡ (PK-≡-sym (PK-T-Id A E Y)) (PK-≡-refl (PK-T A E f))))
-  (𝕃-T-nat A E (PK-Id _) f (λ x → tt) f-tot)
+𝕃-T-nat-right : (A E X : Set) → {Y Y' : Set} → (f : SF Y Y') 
+  → SF-Total f → SF≡ (SF-∘ (SF-id _ ⊗ SF-T A E f) (𝕃 A E X Y'))
+                            (SF-∘ (𝕃 A E X Y) (SF-T A E (SF-id _ ⊗ f)))
+𝕃-T-nat-right A E Y f f-tot = SF≡-Tran _ _ _
+  (SF-∘-l≡ (SF-id _ ⊗ SF-T A E f) ((SF-T A E (SF-id _)) ⊗ (SF-T A E f)) (𝕃 A E _ _)
+           (⊗-≡ (SF≡-Symm _ _ (SF-T-Id A E Y)) (SF≡-Refl (SF-T A E f))))
+  (𝕃-T-nat A E (SF-id _) f (λ x → tt) f-tot)
 
 
--- ⊗-≡ (PK-≡-refl (PK-T A E f)) (PK-≡-sym (PK-T-Id A E Y))
+-- ⊗-≡ (SF≡-Refl (SF-T A E f)) (SF≡-Symm _ _ (SF-T-Id A E Y))
 
-ℙ-σ : (A E X Y : Set) → PK-≡ (PK-∘ (PK-T-η A E X ⊗ PK-Id _) (ℙ A E X Y))
-                                        (PK-T-σ A E X Y)
+ℙ-σ : (A E X Y : Set) → SF≡ (SF-∘ (SF-T-η A E X ⊗ SF-id _) (ℙ A E X Y))
+                                        (SF-T-σ A E X Y)
 
 proj₁ (ℙ-σ A E X Y) (x , ret y) ((tt , tt) , inj₁ tt) = tt , refl
 proj₁ (ℙ-σ A E X Y) (x , ret y) ((tt , tt) , inj₂ tt) = tt , refl
@@ -135,12 +139,12 @@ proj₂ (ℙ-σ A E X Y) (x , err e) tt = ((tt , tt) , (inj₂ tt)) , refl
 
 
 
-𝕃ℝ-γ : (A E X Y : Set) → PK-≡ (PK-∘ (𝕃 A E X Y) (PK-T A E (⊗-γ X Y)))
-                                   (PK-∘ (⊗-γ (Trace A E X) (Trace A E Y)) (ℝ A E Y X))
-ℝ𝕃-γ : (A E X Y : Set) → PK-≡ (PK-∘ (ℝ A E X Y) (PK-T A E (⊗-γ X Y)))
-                                   (PK-∘ (⊗-γ (Trace A E X) (Trace A E Y)) (𝕃 A E Y X))
-ℙ-γ : (A E X Y : Set) → PK-≡ (PK-∘ (ℙ A E X Y) (PK-T A E (⊗-γ X Y)))
-                                  (PK-∘ (⊗-γ (Trace A E X) (Trace A E Y)) (ℙ A E Y X))
+𝕃ℝ-γ : (A E X Y : Set) → SF≡ (SF-∘ (𝕃 A E X Y) (SF-T A E (⊗-γ X Y)))
+                                   (SF-∘ (⊗-γ (Trace A E X) (Trace A E Y)) (ℝ A E Y X))
+ℝ𝕃-γ : (A E X Y : Set) → SF≡ (SF-∘ (ℝ A E X Y) (SF-T A E (⊗-γ X Y)))
+                                   (SF-∘ (⊗-γ (Trace A E X) (Trace A E Y)) (𝕃 A E Y X))
+ℙ-γ : (A E X Y : Set) → SF≡ (SF-∘ (ℙ A E X Y) (SF-T A E (⊗-γ X Y)))
+                                  (SF-∘ (⊗-γ (Trace A E X) (Trace A E Y)) (ℙ A E Y X))
 proj₁ (𝕃ℝ-γ A E X Y) (ret x , ret y) (i , j) = (tt , tt) , refl
 proj₁ (𝕃ℝ-γ A E X Y) (act a l , r) (i , j)
   with proj₁ (ℙ-γ A E X Y) (l , r) (i , j)
@@ -178,18 +182,18 @@ proj₂ (ℙ-γ A E X Y) (l , r) (tt , inj₂ i)
 
 
 -- associativity
-ℙ-α : (A E X Y Z : Set) → PK-≡ (PK-∘ (PK-Id _ ⊗ ℙ A E Y Z) (ℙ A E X (Y × Z)))
-  (PK-∘ (⊗-α' _ _ _) (PK-∘ (ℙ A E X Y ⊗ PK-Id _)
-        (PK-∘ (ℙ A E (X × Y) Z) (PK-T A E (⊗-α X Y Z)))))
-𝕃-α : (A E X Y Z : Set) → PK-≡ (PK-∘ (PK-Id _ ⊗ ℙ A E Y Z) (𝕃 A E X (Y × Z)))
-  (PK-∘ (⊗-α' _ _ _) (PK-∘ (𝕃 A E X Y ⊗ PK-Id _)
-        (PK-∘ (𝕃 A E (X × Y) Z) (PK-T A E (⊗-α X Y Z)))))
-𝕄-α : (A E X Y Z : Set) → PK-≡ (PK-∘ (PK-Id _ ⊗ 𝕃 A E Y Z) (ℝ A E X (Y × Z)))
-  (PK-∘ (⊗-α' _ _ _) (PK-∘ (ℝ A E X Y ⊗ PK-Id _)
-        (PK-∘ (𝕃 A E (X × Y) Z) (PK-T A E (⊗-α X Y Z)))))
-ℝ-α : (A E X Y Z : Set) → PK-≡ (PK-∘ (PK-Id _ ⊗ ℝ A E Y Z) (ℝ A E X (Y × Z)))
-  (PK-∘ (⊗-α' _ _ _) (PK-∘ (ℙ A E X Y ⊗ PK-Id _)
-        (PK-∘ (ℝ A E (X × Y) Z) (PK-T A E (⊗-α X Y Z)))))
+ℙ-α : (A E X Y Z : Set) → SF≡ (SF-∘ (SF-id _ ⊗ ℙ A E Y Z) (ℙ A E X (Y × Z)))
+  (SF-∘ (⊗-α' _ _ _) (SF-∘ (ℙ A E X Y ⊗ SF-id _)
+        (SF-∘ (ℙ A E (X × Y) Z) (SF-T A E (⊗-α X Y Z)))))
+𝕃-α : (A E X Y Z : Set) → SF≡ (SF-∘ (SF-id _ ⊗ ℙ A E Y Z) (𝕃 A E X (Y × Z)))
+  (SF-∘ (⊗-α' _ _ _) (SF-∘ (𝕃 A E X Y ⊗ SF-id _)
+        (SF-∘ (𝕃 A E (X × Y) Z) (SF-T A E (⊗-α X Y Z)))))
+𝕄-α : (A E X Y Z : Set) → SF≡ (SF-∘ (SF-id _ ⊗ 𝕃 A E Y Z) (ℝ A E X (Y × Z)))
+  (SF-∘ (⊗-α' _ _ _) (SF-∘ (ℝ A E X Y ⊗ SF-id _)
+        (SF-∘ (𝕃 A E (X × Y) Z) (SF-T A E (⊗-α X Y Z)))))
+ℝ-α : (A E X Y Z : Set) → SF≡ (SF-∘ (SF-id _ ⊗ ℝ A E Y Z) (ℝ A E X (Y × Z)))
+  (SF-∘ (⊗-α' _ _ _) (SF-∘ (ℙ A E X Y ⊗ SF-id _)
+        (SF-∘ (ℝ A E (X × Y) Z) (SF-T A E (⊗-α X Y Z)))))
 
 proj₁ (ℙ-α A E X Y Z) (l , m , r) ((tt , i) , inj₁ j)
   with proj₁ (𝕃-α A E X Y Z) (l , m , r) ((tt , i) , j)

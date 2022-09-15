@@ -8,14 +8,22 @@ open import Data.Nat hiding (_⊔_)
 open import Data.Product renaming (map to map×)
 open import Relation.Binary.PropositionalEquality hiding ([_])
 
+open import Slice.Base
 
-open import Index-Nondeterminism
-open import Monoidal
+open import Slice-Functions.Base
+open import Slice-Functions.Subcategories
+open import Slice-Functions.Monoidal
 
 open import Monads.Trace
 open import Runner.Trace-Runner
 
 
+
+Rel : (X Y : Set) → Set₁
+Rel X Y = X → Y → Set
+
+Rel₁ : (X Y : Set₁) → Set₁
+Rel₁ X Y = X → Y → Set
 
 Rel× : {A B C D : Set} → Rel A B → Rel C D → Rel (A × C) (B × D)
 Rel× S R (a , c) (b , d) = S a b × R c d
@@ -106,17 +114,17 @@ TRel-κ Γ = {X Y X' Y' : Set} → (S : Rel X Y) → (R : Rel X' Y')
 
 
 -- Nondeterminism
-Pow-Relator : {A E : Set} → (Γ : Trace-Relator A E) → {X Y : Set}
-  → Rel X Y → Rel₁ (Pow (Trace A E X)) (Pow (Trace A E Y))
-Pow-Relator Γ R (I , V) (J , W) = (i : I) → Σ J λ j → Γ R (V i) (W j) 
+SL-Relator : {A E : Set} → (Γ : Trace-Relator A E) → {X Y : Set}
+  → Rel X Y → Rel₁ (SL (Trace A E X)) (SL (Trace A E Y))
+SL-Relator Γ R (I , V) (J , W) = (i : I) → Σ J λ j → Γ R (V i) (W j) 
 
 
 -- This property combine Pow-distributivity and μ-property
-TRel-Pow : {A E : Set} → (Trace-Relator A E) → Set₁
-TRel-Pow Γ = {X Y X' Y' : Set} → (R : Rel X' Y')
-  → (f : PK-Hom X (Trace _ _ X')) → (g : PK-Hom Y (Trace _ _ Y'))
-  → (PK-Total g)
+TRel-SL : {A E : Set} → (Trace-Relator A E) → Set₁
+TRel-SL Γ = {X Y X' Y' : Set} → (R : Rel X' Y')
+  → (f : SF X (Trace _ _ X')) → (g : SF Y (Trace _ _ Y'))
+  → (SF-Total g)
   → (t : Trace _ _ X) → (r : Trace _ _ Y)
-  → Γ (λ a b → Pow-Relator Γ R (f a) (g b)) t r
-  → Pow-Relator Γ R (PK-∘ (PK-T _ _ f) (PK-T-μ _ _ _) t)
-                    (PK-∘ (PK-T _ _ g) (PK-T-μ _ _ _) r)
+  → Γ (λ a b → SL-Relator Γ R (f a) (g b)) t r
+  → SL-Relator Γ R (SF-∘ (SF-T _ _ f) (SF-T-μ _ _ _) t)
+                    (SF-∘ (SF-T _ _ g) (SF-T-μ _ _ _) r)

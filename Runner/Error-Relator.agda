@@ -9,9 +9,6 @@ open import Data.Product renaming (map to map×)
 open import Relation.Binary.PropositionalEquality hiding ([_])
 
 
-open import Index-Nondeterminism
-open import Monoidal
-
 open import Monads.Trace
 open import Runner.Trace-Runner
 open import Runner.Trace-Relator
@@ -91,10 +88,10 @@ E-relat-κ U S R f g (err e) .(err e) f-g (rel-err .e) = rel-err e
 E-relat-κ U S R f g (err e) r f-g (rel-inv .e Ue .r) = rel-inv e Ue (Trace-κ ⊥ _ _ _ g r)
 
 
-E-relat-Pow : {E : Set} → (U : E → Set) → TRel-Pow (E-relat U)
+E-relat-Pow : {E : Set} → (U : E → Set) → TRel-SL (E-relat U)
 E-relat-Pow U R f g g-tot (ret x) .(ret y) (rel-ret .x y x-y) (i , tt) =
   (proj₁ (x-y i) , tt) , proj₂ (x-y i)
 E-relat-Pow U R f g g-tot (err x) .(err x) (rel-err .x) i = (tt , tt) , (rel-err x)
 E-relat-Pow U R f g g-tot (err x) r (rel-inv .x xU .r) i =
-  (PK-T-Total ⊥ _ g g-tot r , tt) , rel-inv x xU _
+  (SF-T-Total ⊥ _ g g-tot r , tt) , rel-inv x xU _
 

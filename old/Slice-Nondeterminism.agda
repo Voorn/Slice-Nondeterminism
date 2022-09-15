@@ -1,4 +1,4 @@
-module Index-Nondeterminism where
+module Slice-Nondeterminism where
 
 open import Data.Unit
 open import Data.Empty
@@ -7,20 +7,16 @@ open import Data.Nat hiding (_⊔_)
 open import Data.Product renaming (map to map×)
 open import Relation.Binary.PropositionalEquality hiding ([_])
 
+open import Slice
+open import Slice-Functions
+open import Extensionality
 
-postulate fun-ext : {X Y : Set} → {f g : X → Y} → ((x : X) → f x ≡ g x) → (f ≡ g)
-
-
- 
-Rel : Set → Set → Set₁
-Rel X Y = X → Y → Set
 
 Rel₁ : Set₁ → Set₁ → Set₁
 Rel₁ X Y = X → Y → Set
 
-Pow : (X : Set) → Set₁
-Pow X = Σ Set λ I → I → X
 
+Pow = SL
 
 
 Pow→ : {X Y : Set} → (X → Y) → (Pow X → Pow Y)
@@ -32,14 +28,17 @@ id X x = x
 
 
 -- A notion of function equality
-Pow-Γ : {X Y : Set} → Rel X Y → Rel₁ (Pow X) (Pow Y)
-Pow-Γ R (I , a) (J , b) = (i : I) → Σ J λ j → R (a i) (b j)
+
+--Pow-Γ : {X Y : Set} → (X → Y → Set) → Rel₁ (Pow X) (Pow Y)
+--Pow-Γ R (I , a) (J , b) = (i : I) → Σ J λ j → R (a i) (b j)
 
 Pow-Γ≡ : (X : Set) → Rel₁ (Pow X) (Pow X)
-Pow-Γ≡ X = Pow-Γ (_≡_)
+Pow-Γ≡ = SL→
+-- = Pow-Γ (_ ≡ _)
 
 Pow-< : {X Y : Set} → Rel₁ (X → Pow Y) (X → Pow Y)
-Pow-< {X} {Y} f g  = (x : X) → Pow-Γ≡ Y (f x) (g x)
+Pow-< {X} {Y} f g  = (x : X) → SL→ Y (f x) (g x)
+
 
 
 Pow-refl : {X Y : Set} → (f : X → Pow Y) → Pow-< f f
@@ -50,9 +49,20 @@ Pow-trans f<g g<h x i = proj₁ (g<h x (proj₁ (f<g x i))) ,
   trans (proj₂ (f<g x i)) (proj₂ (g<h x (proj₁ (f<g x i))))
 
 -- Membership
-Pow-∈ : (X : Set) → X → Pow X → Set
+Pow-∈ : (X : Set) → X → SL X → Set
 Pow-∈ X x (I , s) = Σ I λ i → s i ≡ x
 
+Pow-⊂ : (X : Set) → SL X → SL X → Set
+Pow-⊂ X A B = (x : X) → Pow-∈ X x A → Pow-∈ X x B
+
+Pow-SL-1 : (X : Set) → (A B : SL X) → Pow-⊂ X A B → SL→ X A B
+Pow-SL-1 X (I , F) (J , G) sub i with sub (F i) (i , refl)
+... | (j , eq) = j , (sym eq)
+
+
+Pow-SL-2 : (X : Set) → (A B : SL X) → SL→ X A B → Pow-⊂ X A B
+Pow-SL-2 X (I , F) (J , G) map .(F i) (i , refl) with map i
+... | (j , eq) = j , sym eq
 
 -- Kleisli structure
 
@@ -80,14 +90,25 @@ PK-Id X x = ⊤ , (λ _ → x)
 
 
 Pow-κ : (X Y : Set) → (X → Pow Y) → (Pow X → Pow Y)
-Pow-κ X Y f (I , a) = (Σ I λ i → proj₁ (f (a i))) ,
-  (λ {(i , j) → proj₂ (f (a i)) j})
+Pow-κ X Y = SL-* {X} {Y}
+--f (I , a) = (Σ I λ i → proj₁ (f (a i))) ,
+--  (λ {(i , j) → proj₂ (f (a i)) j})
+
+
+
+-- Directional spans:
+-- Objects are sets
+-- Morphisms X to Y are functions X to SL Y
+-- Order is SL→
+
 
 PK-∘ : {X Y Z : Set} → PK-Hom X Y → PK-Hom Y Z → PK-Hom X Z
 PK-∘ {X} {Y} {Z} f g x = Pow-κ Y Z g (f x)
 
 abstract
   PKA-∘ = PK-∘
+
+
 
 PK-luni : {X Y : Set} → (f : PK-Hom X Y) → PK-≡ (PK-∘ (PK-Id X) f) f
 proj₁ (PK-luni f) x (tt , j) = j , refl
@@ -174,41 +195,22 @@ proj₂ (PK-rev-≡ f g (f<g , g<f)) y (x , i , fxi≡y) =
 
 
 -- Structure of powerdomain
-Pow-⊤ : (X : Set) → Pow X
-Pow-⊤ X = X , (λ x → x)
-
-Pow-⊥ : (X : Set) → Pow X
-Pow-⊥ X = ⊥ , (λ {()})
-
-
-join : {X : Set} → Pow X → Pow X → Pow X
-join (I , l) (J , r) = (I ⊎ J) , (λ { (inj₁ i) → l i ; (inj₂ j) → r j})
-
-join-< : {X : Set} → {a b c d : Pow X}
-  → Pow-Γ≡ X a b → Pow-Γ≡ X c d → Pow-Γ≡ X (join a c) (join b d)
-join-< a<b c<d (inj₁ i) = (inj₁ (proj₁ (a<b i))) , (proj₂ (a<b i))
-join-< a<b c<d (inj₂ j) = (inj₂ (proj₁ (c<d j))) , (proj₂ (c<d j))
-
-
+open import Slice-Lattice
 
 PK-join : {X Y : Set} → PK-Hom X Y → PK-Hom X Y → PK-Hom X Y
 PK-join f g x = join (f x) (g x)
 
 PK-join-sym : {X Y : Set} → (f g : PK-Hom X Y) → PK-≡ (PK-join f g) (PK-join g f)
-proj₁ (PK-join-sym f g) x (inj₁ i) = (inj₂ i) , refl
-proj₁ (PK-join-sym f g) x (inj₂ j) = inj₁ j , refl
-proj₂ (PK-join-sym f g) x (inj₁ i) = (inj₂ i) , refl
-proj₂ (PK-join-sym f g) x (inj₂ j) = inj₁ j , refl
+PK-join-sym f g = (λ x → proj₁ (join-symm (f x) (g x))) , λ x → proj₂ (join-symm (f x) (g x))
+
 
 PK-join-l< : {X Y : Set} → (f g h : PK-Hom X Y)
   → Pow-< f g → Pow-< (PK-join f h) (PK-join g h)
-PK-join-l< f g h f<g x (inj₁ i) = (inj₁ (proj₁ (f<g x i))) , (proj₂ (f<g x i))
-PK-join-l< f g h f<g x (inj₂ j) = (inj₂ j) , refl
+PK-join-l< f g h f<g x = join-< (f<g x) (SL→id _ (h x))
 
 PK-join-r< :  {X Y : Set} → (f g h : PK-Hom X Y)
   → Pow-< g h → Pow-< (PK-join f g) (PK-join f h)
-PK-join-r< f g h g<h = Pow-trans (proj₁ (PK-join-sym _ _))
-  (Pow-trans (PK-join-l< _ _ _ g<h) (proj₁ (PK-join-sym _ _)))
+PK-join-r< f g h g<h x = join-< (SL→id _ (f x)) (g<h x)
 
 PK-join-≡ : {X Y : Set} → (f g h k : PK-Hom X Y) → PK-≡ f g → PK-≡ h k
   → PK-≡ (PK-join f h) (PK-join g k)
@@ -216,99 +218,4 @@ proj₁ (PK-join-≡ f g h k (f<g , g<f) (h<k , k<h)) =
   Pow-trans (PK-join-l< f g h f<g) (PK-join-r< g h k h<k)
 proj₂ (PK-join-≡ f g h k (f<g , g<f) (h<k , k<h)) =
   Pow-trans (PK-join-l< g f k g<f) (PK-join-r< f k h k<h)
-
-
--- Subcategories
--- Total relations
-PK-Total : {X Y : Set} → PK-Hom X Y → Set
-PK-Total {X} f = (x : X) → proj₁ (f x)
-
-PK-Total-Id : (X : Set) → PK-Total (PK-Id X)
-PK-Total-Id X x = tt
-
-PK-Total-∘ : {X Y Z : Set} → (f : PK-Hom X Y) → (g : PK-Hom Y Z)
-  → PK-Total f → PK-Total g → PK-Total (PK-∘ f g)
-PK-Total-∘ f g if ig x = (if x) , (ig (proj₂ (f x) (if x)))
-
-
-
--- One or less valued
-PK-Onele : {X Y : Set} → PK-Hom X Y → Set
-PK-Onele {X} f = (x : X) → (i j : proj₁ (f x)) → proj₂ (f x) i ≡ proj₂ (f x) j
-
-PK-Onele-Id : (X : Set) → PK-Onele (PK-Id X)
-PK-Onele-Id X x i j = refl
-
-PK-Onele-∘ : {X Y Z : Set} → (f : PK-Hom X Y) → (g : PK-Hom Y Z)
-  → PK-Onele f → PK-Onele g → PK-Onele (PK-∘ f g)
-PK-Onele-∘ f g lf lg x (i , j) (i' , j') rewrite lf x i i' = lg (proj₂ (f x) i') j j'
-
-
-
--- Injective
-PK-Injec : {X Y : Set} → PK-Hom X Y → Set
-PK-Injec {X} f = (x y : X) → (i : proj₁ (f x)) → (j : proj₁ (f y))
-  → proj₂ (f x) i ≡ proj₂ (f y) j → x ≡ y
-
-PK-Injec-Id : (X : Set) → PK-Injec (PK-Id X)
-PK-Injec-Id X x y i j eq = eq
-
-PK-Injec-∘ : {X Y Z : Set} → (f : PK-Hom X Y) → (g : PK-Hom Y Z)
-  → PK-Injec f → PK-Injec g → PK-Injec (PK-∘ f g)
-PK-Injec-∘ f g of og x y (i , j) (i' , j') eq =
-  of x y i i' (og (proj₂ (f x) i) (proj₂ (f y) i') j j' eq)
-
-
--- Surjective
-PK-Surje : {X Y : Set} → PK-Hom X Y → Set
-PK-Surje {X} {Y} f = (y : Y) → Σ X λ x → Σ (proj₁ (f x)) λ i → proj₂ (f x) i ≡ y
-
-PK-Surje-Id : (X : Set) → PK-Surje (PK-Id X)
-PK-Surje-Id X x = x , (tt , refl)
-
-PK-Surje-∘ : {X Y Z : Set} → (f : PK-Hom X Y) → (g : PK-Hom Y Z)
-  → PK-Surje f → PK-Surje g → PK-Surje (PK-∘ f g)
-PK-Surje-∘ f g sf sg z with sg z
-... | y , j , refl with sf y
-... | x , i , refl = x , ((i , j) , refl)
-
-
-
-
--- Reversing swaps properties
-PK-rev-Total : {X Y : Set} → (f : PK-Hom X Y) → PK-Total f → PK-Surje (PK-rev f)
-PK-rev-Total f tf x = (proj₂ (f x) (tf x)) , ((x , ((tf x) , refl)) , refl)
-
-PK-rev-Surje : {X Y : Set} → (f : PK-Hom X Y) → PK-Surje f → PK-Total (PK-rev f)
-PK-rev-Surje f sf y = (proj₁ (sf y)) , ((proj₁ (proj₂ (sf y))) , (proj₂ (proj₂ (sf y))))
-
-PK-rev-Lone : {X Y : Set} → (f : PK-Hom X Y) → PK-Onele f → PK-Injec (PK-rev f)
-PK-rev-Lone f of x y (x₀ , i , eq₀) (.x₀ , j , eq₁) refl =
-  trans (sym eq₀) (trans (of x₀ i j) eq₁)
-
-PK-rev-Injec : {X Y : Set} → (f : PK-Hom X Y) → PK-Injec f → PK-Onele (PK-rev f)
-PK-rev-Injec f if y (x , i , eq) (x' , j , eq') = if x x' i j (trans eq (sym eq'))
-
-
-
--- Set is the subcategory of Onele and Total relations
-PK-Fun-Onele : {X Y : Set} → (f : X → Y) → PK-Onele (PK-Fun f)
-PK-Fun-Onele f x i j = refl
-
-PK-Fun-Total : {X Y : Set} → (f : X → Y) → PK-Total (PK-Fun f)
-PK-Fun-Total f x = tt
-
---Note: Since Set's notion of equality is the eternal equivalence of Agda,
---PK-Fun trivially preserves equivalence
-
-
---Showing that the Functor PK-Fun is bijective on morphisms (function extensionality)
-PK-Fun-inv≡ : {X Y : Set} → (f g : X → Y) → PK-≡ (PK-Fun f) (PK-Fun g) → (f ≡ g)
-PK-Fun-inv≡ f g (f<g , g<f) = fun-ext λ x → proj₂ (f<g x tt)
-
-PK-Fun-inv : {X Y : Set} → (f : PK-Hom X Y) → PK-Onele f → PK-Total f
-  → Σ (X → Y) λ h → PK-≡ (PK-Fun h) f
-proj₁ (PK-Fun-inv f fone ftot) x = proj₂ (f x) (ftot x)
-proj₂ (PK-Fun-inv f fone ftot) = (λ x i → (ftot x) , refl) ,
-                                  λ x i → tt , (fone x i (ftot x))
 

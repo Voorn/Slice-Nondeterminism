@@ -8,8 +8,14 @@ open import Data.Product renaming (map to map×)
 open import Relation.Binary.PropositionalEquality hiding ([_])
 
 
-open import Index-Nondeterminism
-open import Monoidal
+open import Slice.Base
+open import Slice.Lattice
+
+open import Slice-Functions.Base
+open import Slice-Functions.Subcategories
+open import Slice-Functions.Monoidal
+open import Slice-Functions.Dagger
+
 open import Monads.Free-Monad
 
 SigT : Set → Sig
@@ -56,287 +62,277 @@ Trace-map A E f (act a t) = act a (Trace-map A E f t)
 Trace-map A E f (err e) = err e
 
 
---PK-T : (A E : Set) → {X Y : Set} → PK-Hom X Y → PK-Hom (Trace A E X) (Trace A E Y)
---proj₁ (PK-T A E f t) with Trace-ex t
---... | inj₁ e = ⊤
---... | inj₂ x = proj₁ (f x)
---proj₂ (PK-T A E f (ret x)) i = ret (proj₂ (f x) i)
---proj₂ (PK-T A E f (act a t)) i  with Trace-ex t
---... | inj₁ e = {!!}
---... | inj₂ x = act a (proj₂ (PK-T A E f t) {!!})
+SL-act : {A E : Set} → (a : A) → (X : Set) → SL (Trace A E X) → SL (Trace A E X)
+SL-act a X = SL-fun (act a)
+
+SL-act-< : {A E : Set} → (a : A) → (X : Set) → (u v : SL (Trace A E X))
+  → SL→ (Trace A E X) u v → SL→ (Trace A E X) (SL-act a X u) (SL-act a X v)
+SL-act-< a X u v u<v i = (proj₁ (u<v i)) , (cong (act a) (proj₂ (u<v i)))
 
 
-Pow-act : {A E : Set} → (a : A) → (X : Set) → Pow (Trace A E X) → Pow (Trace A E X)
-Pow-act a X = Pow→ (act a)
-
-Pow-act-< : {A E : Set} → (a : A) → (X : Set) → (u v : Pow (Trace A E X))
-  → Pow-Γ≡ (Trace A E X) u v → Pow-Γ≡ (Trace A E X) (Pow-act a X u) (Pow-act a X v)
-Pow-act-< a X u v u<v i = (proj₁ (u<v i)) , (cong (act a) (proj₂ (u<v i)))
+SF-T : (A E : Set) → {X Y : Set} → SF X Y → SF (Trace A E X) (Trace A E Y)
+SF-T A E f (ret x) = proj₁ (f x) , λ i → ret (proj₂ (f x) i)
+SF-T A E f (act a t) = SL-act a _ (SF-T A E f t)
+SF-T A E f (err e) = SF-id _ (err e)
 
 
-PK-T : (A E : Set) → {X Y : Set} → PK-Hom X Y → PK-Hom (Trace A E X) (Trace A E Y)
-PK-T A E f (ret x) = proj₁ (f x) , λ i → ret (proj₂ (f x) i)
-PK-T A E f (act a t) = Pow-act a _ (PK-T A E f t)
-PK-T A E f (err e) = PK-Id _ (err e)
+SF-T-Id :  (A E X : Set) → SF≡ (SF-T A E (SF-id X)) (SF-id (Trace A E X))
+proj₁ (SF-T-Id A E X) (ret x) i = tt , refl
+proj₁ (SF-T-Id A E X) (act a t) i = tt , (cong (act a) (proj₂ (proj₁ (SF-T-Id A E X) t i)))
+proj₁ (SF-T-Id A E X) (err e) i = tt , refl
+proj₂ (SF-T-Id A E X) (ret x) i = tt , refl
+proj₂ (SF-T-Id A E X) (act a t) i = (proj₁ (proj₂ (SF-T-Id A E X) t i)) ,
+  (cong (act a) (proj₂ (proj₂ (SF-T-Id A E X) t i)))
+proj₂ (SF-T-Id A E X) (err e) i = tt , refl
 
-
-PK-T-Id :  (A E X : Set) → PK-≡ (PK-T A E (PK-Id X)) (PK-Id (Trace A E X))
-proj₁ (PK-T-Id A E X) (ret x) i = tt , refl
-proj₁ (PK-T-Id A E X) (act a t) i = tt , (cong (act a) (proj₂ (proj₁ (PK-T-Id A E X) t i)))
-proj₁ (PK-T-Id A E X) (err e) i = tt , refl
-proj₂ (PK-T-Id A E X) (ret x) i = tt , refl
-proj₂ (PK-T-Id A E X) (act a t) i = (proj₁ (proj₂ (PK-T-Id A E X) t i)) ,
-  (cong (act a) (proj₂ (proj₂ (PK-T-Id A E X) t i)))
-proj₂ (PK-T-Id A E X) (err e) i = tt , refl
-
-PK-T-∘ : (A E : Set) → {X Y Z : Set} → (f : PK-Hom X Y) → (g : PK-Hom Y Z)
-  → PK-≡ (PK-T A E (PK-∘ f g)) (PK-∘ (PK-T A E f) (PK-T A E g))
-proj₁ (PK-T-∘ A E f g) (ret x) (i , j) = (i , j) , refl
-proj₁ (PK-T-∘ A E f g) (act a t) i with proj₁ (PK-T-∘ A E f g) t i
+SF-T-∘ : (A E : Set) → {X Y Z : Set} → (f : SF X Y) → (g : SF Y Z)
+  → SF≡ (SF-T A E (SF-∘ f g)) (SF-∘ (SF-T A E f) (SF-T A E g))
+proj₁ (SF-T-∘ A E f g) (ret x) (i , j) = (i , j) , refl
+proj₁ (SF-T-∘ A E f g) (act a t) i with proj₁ (SF-T-∘ A E f g) t i
 ... | u , eq = u , (cong (act a) eq)
-proj₁ (PK-T-∘ A E f g) (err e) i = (tt , tt) , refl
-proj₂ (PK-T-∘ A E f g) (ret x) (i , j) = (i , j) , refl
-proj₂ (PK-T-∘ A E f g) (act a t) (i , j) with proj₂ (PK-T-∘ A E f g) t (i , j)
+proj₁ (SF-T-∘ A E f g) (err e) i = (tt , tt) , refl
+proj₂ (SF-T-∘ A E f g) (ret x) (i , j) = (i , j) , refl
+proj₂ (SF-T-∘ A E f g) (act a t) (i , j) with proj₂ (SF-T-∘ A E f g) t (i , j)
 ... | u ,  eq = u , (cong (act a) eq)
-proj₂ (PK-T-∘ A E f g) (err e) (i , j) = tt , refl
+proj₂ (SF-T-∘ A E f g) (err e) (i , j) = tt , refl
 
-PK-T-Total : (A E : Set) → {X Y : Set} → (f : PK-Hom X Y)
-  → (PK-Total f) → PK-Total (PK-T A E f)
-PK-T-Total A E f f-tot (ret x) = f-tot x
-PK-T-Total A E f f-tot (act a t) = PK-T-Total A E f f-tot t
-PK-T-Total A E f f-tot (err e) = tt
+SF-T-Total : (A E : Set) → {X Y : Set} → (f : SF X Y)
+  → (SF-Total f) → SF-Total (SF-T A E f)
+SF-T-Total A E f f-tot (ret x) = f-tot x
+SF-T-Total A E f f-tot (act a t) = SF-T-Total A E f f-tot t
+SF-T-Total A E f f-tot (err e) = tt
 
-PK-T-σ : (A E X Y : Set) → PK-Hom (X × Trace A E Y) (Trace A E (X × Y))
-PK-T-σ A E X Y = PK-Fun (Trace-σ A E X Y)
+SF-T-σ : (A E X Y : Set) → SF (X × Trace A E Y) (Trace A E (X × Y))
+SF-T-σ A E X Y = SF-Fun (Trace-σ A E X Y)
 
 
 -- Naturality on total maps
-PK-T-σ-nat< : (A E : Set) → {X X' Y Y' : Set} → (f : PK-Hom X X') → (g : PK-Hom Y Y')
-  → Pow-< (PK-∘ (f ⊗ (PK-T A E g)) (PK-T-σ A E X' Y'))
-          (PK-∘ (PK-T-σ A E X Y) (PK-T A E (f ⊗ g)))
+SF-T-σ-nat< : (A E : Set) → {X X' Y Y' : Set} → (f : SF X X') → (g : SF Y Y')
+  → SF≤ (SF-∘ (f ⊗ (SF-T A E g)) (SF-T-σ A E X' Y'))
+          (SF-∘ (SF-T-σ A E X Y) (SF-T A E (f ⊗ g)))
 
-PK-T-σ-nat< A E f g (y , ret x) (i , tt) = (tt , i) , refl
-PK-T-σ-nat< A E f g (y , act a t) (i , tt)
-  with PK-T-σ-nat< A E f g (y , t) (i , tt)
+SF-T-σ-nat< A E f g (y , ret x) (i , tt) = (tt , i) , refl
+SF-T-σ-nat< A E f g (y , act a t) (i , tt)
+  with SF-T-σ-nat< A E f g (y , t) (i , tt)
 ... | u , eq = u , (cong (act a) eq)
-PK-T-σ-nat< A E f g (y , err e) (i , tt) = (tt , tt) , refl
+SF-T-σ-nat< A E f g (y , err e) (i , tt) = (tt , tt) , refl
 
-PK-T-σ-T-nat> : (A E : Set) → {X X' Y Y' : Set} → (f : PK-Hom X X') → (g : PK-Hom Y Y')
-  → PK-Total f
-  → Pow-< (PK-∘ (PK-T-σ A E X Y) (PK-T A E (f ⊗ g)))
-          (PK-∘ (f ⊗ (PK-T A E g)) (PK-T-σ A E X' Y'))
-PK-T-σ-T-nat> A E f g f-tot (x , ret y) (tt , i , j) = ((i , j) , tt) , refl
-PK-T-σ-T-nat> A E f g f-tot (x , act a t) (tt , i)
-   with  PK-T-σ-T-nat> A E f g f-tot (x , t) (tt , i)
+SF-T-σ-T-nat> : (A E : Set) → {X X' Y Y' : Set} → (f : SF X X') → (g : SF Y Y')
+  → SF-Total f
+  → SF≤ (SF-∘ (SF-T-σ A E X Y) (SF-T A E (f ⊗ g)))
+          (SF-∘ (f ⊗ (SF-T A E g)) (SF-T-σ A E X' Y'))
+SF-T-σ-T-nat> A E f g f-tot (x , ret y) (tt , i , j) = ((i , j) , tt) , refl
+SF-T-σ-T-nat> A E f g f-tot (x , act a t) (tt , i)
+   with  SF-T-σ-T-nat> A E f g f-tot (x , t) (tt , i)
 ... | u , eq = u , cong (act a) eq
-PK-T-σ-T-nat> A E f g f-tot (x , err e) (tt , i) = ((f-tot x , tt) , tt) , refl
+SF-T-σ-T-nat> A E f g f-tot (x , err e) (tt , i) = ((f-tot x , tt) , tt) , refl
 
-PK-T-σ-T-nat : (A E : Set) → {X X' Y Y' : Set} → (f : PK-Hom X X') → (g : PK-Hom Y Y')
-  → PK-Total f
-  → PK-≡ (PK-∘ (f ⊗ (PK-T A E g)) (PK-T-σ A E X' Y'))
-         (PK-∘ (PK-T-σ A E X Y) (PK-T A E (f ⊗ g)))
-PK-T-σ-T-nat A E f g f-tot = (PK-T-σ-nat< A E f g) , (PK-T-σ-T-nat> A E f g f-tot)
-
-
+SF-T-σ-T-nat : (A E : Set) → {X X' Y Y' : Set} → (f : SF X X') → (g : SF Y Y')
+  → SF-Total f
+  → SF≡ (SF-∘ (f ⊗ (SF-T A E g)) (SF-T-σ A E X' Y'))
+         (SF-∘ (SF-T-σ A E X Y) (SF-T A E (f ⊗ g)))
+SF-T-σ-T-nat A E f g f-tot = (SF-T-σ-nat< A E f g) , (SF-T-σ-T-nat> A E f g f-tot)
 
 
-PK-T-η : (A E : Set) → (X : Set) → PK-Hom X (Trace A E X)
-PK-T-η A E X = PK-Fun ret
-
-PK-T-η-nat : (A E : Set) → {X Y : Set} → (f : PK-Hom X Y)
-  → PK-≡ (PK-∘ f (PK-T-η A E Y)) (PK-∘ (PK-T-η A E X) (PK-T A E f))
-proj₁ (PK-T-η-nat A E f) x (i , tt) = (tt , i) , refl
-proj₂ (PK-T-η-nat A E f) x (tt , i) = (i , tt) , refl
-
-PK-T-η-Total : (A E X : Set) → PK-Total (PK-T-η A E X)
-PK-T-η-Total A E X = PK-Fun-Total {X} {Trace A E X} ret
 
 
-PK-T-μ : (A E : Set) → (X : Set) → PK-Hom (Trace A E (Trace A E X)) (Trace A E X)
-PK-T-μ A E X = PK-Fun (Trace-μ A E X)
+SF-T-η : (A E : Set) → (X : Set) → SF X (Trace A E X)
+SF-T-η A E X = SF-Fun ret
 
-PK-T-μ-nat : (A E : Set) → {X Y : Set} → (f : PK-Hom X Y)
-  → PK-≡ (PK-∘ (PK-T A E (PK-T A E f)) (PK-T-μ A E Y)) (PK-∘ (PK-T-μ A E X) (PK-T A E f))
-proj₁ (PK-T-μ-nat A E f) (ret t) (i , tt) = (tt , i) , refl
-proj₁ (PK-T-μ-nat A E f) (act a t) i
-  with proj₁ (PK-T-μ-nat A E f) t i
+SF-T-η-nat : (A E : Set) → {X Y : Set} → (f : SF X Y)
+  → SF≡ (SF-∘ f (SF-T-η A E Y)) (SF-∘ (SF-T-η A E X) (SF-T A E f))
+proj₁ (SF-T-η-nat A E f) x (i , tt) = (tt , i) , refl
+proj₂ (SF-T-η-nat A E f) x (tt , i) = (i , tt) , refl
+
+SF-T-η-Total : (A E X : Set) → SF-Total (SF-T-η A E X)
+SF-T-η-Total A E X = SF-Fun-Total {X} {Trace A E X} ret
+
+
+SF-T-μ : (A E : Set) → (X : Set) → SF (Trace A E (Trace A E X)) (Trace A E X)
+SF-T-μ A E X = SF-Fun (Trace-μ A E X)
+
+SF-T-μ-nat : (A E : Set) → {X Y : Set} → (f : SF X Y)
+  → SF≡ (SF-∘ (SF-T A E (SF-T A E f)) (SF-T-μ A E Y)) (SF-∘ (SF-T-μ A E X) (SF-T A E f))
+proj₁ (SF-T-μ-nat A E f) (ret t) (i , tt) = (tt , i) , refl
+proj₁ (SF-T-μ-nat A E f) (act a t) i
+  with proj₁ (SF-T-μ-nat A E f) t i
 ... | u , eq = u , (cong (act a) eq)
-proj₁ (PK-T-μ-nat A E f) (err e) i = (tt , tt) , refl
+proj₁ (SF-T-μ-nat A E f) (err e) i = (tt , tt) , refl
 
-proj₂ (PK-T-μ-nat A E f) (ret x) (tt , j) = (j , tt) , refl
-proj₂ (PK-T-μ-nat A E f) (act a t) i
-  with proj₂ (PK-T-μ-nat A E f) t i
+proj₂ (SF-T-μ-nat A E f) (ret x) (tt , j) = (j , tt) , refl
+proj₂ (SF-T-μ-nat A E f) (act a t) i
+  with proj₂ (SF-T-μ-nat A E f) t i
 ... | u , eq = u , (cong (act a) eq)
-proj₂ (PK-T-μ-nat A E f) (err e) i = (tt , tt) , refl
+proj₂ (SF-T-μ-nat A E f) (err e) i = (tt , tt) , refl
 
-PK-T-μ-Total : (A E X : Set) → PK-Total (PK-T-μ A E X)
-PK-T-μ-Total A E X = PK-Fun-Total {_} {Trace A E X} (Trace-μ A E X)
+SF-T-μ-Total : (A E X : Set) → SF-Total (SF-T-μ A E X)
+SF-T-μ-Total A E X = SF-Fun-Total {_} {Trace A E X} (Trace-μ A E X)
 
 
 
-PK-T-κ : {A E : Set} → (X Y : Set) → PK-Hom X (Trace A E Y)
-                                   → PK-Hom (Trace A E X) (Trace A E Y)
-PK-T-κ X Y f (ret x) = f x
-PK-T-κ X Y f (act a t) = Pow-act a Y (PK-T-κ X Y f t)
-PK-T-κ X Y f (err e) = PK-Id _ (err e)
+SF-T-κ : {A E : Set} → (X Y : Set) → SF X (Trace A E Y)
+                                   → SF (Trace A E X) (Trace A E Y)
+SF-T-κ X Y f (ret x) = f x
+SF-T-κ X Y f (act a t) = SL-act a Y (SF-T-κ X Y f t)
+SF-T-κ X Y f (err e) = SF-id _ (err e)
 
 -- comonad
-PK-T-ε : (A E X : Set) → PK-Hom (Trace A E X) X
-PK-T-ε A E X (ret x) = PK-Id _ x
-PK-T-ε A E X (act a t) = Pow-⊥ _
-PK-T-ε A E X (err e) = Pow-⊥ _
+SF-T-ε : (A E X : Set) → SF (Trace A E X) X
+SF-T-ε A E X (ret x) = SF-id _ x
+SF-T-ε A E X (act a t) = SL-⊥ _
+SF-T-ε A E X (err e) = SL-⊥ _
 
 
-PK-T-η-rev : (A E X : Set) → PK-≡ (PK-∘ (PK-T-η A E X) (PK-T-ε A E X)) (PK-Id _)
-PK-T-η-rev A E X = (λ x i → tt , refl) , (λ x i → (tt , tt) , refl)
+SF-T-η-rev : (A E X : Set) → SF≡ (SF-∘ (SF-T-η A E X) (SF-T-ε A E X)) (SF-id _)
+SF-T-η-rev A E X = (λ x i → tt , refl) , (λ x i → (tt , tt) , refl)
 
 
-PK-T-ε-Onele : (A E X : Set) → PK-Onele (PK-T-ε A E X)
-PK-T-ε-Onele A E X (ret x) i j = refl
+SF-T-ε-Onele : (A E X : Set) → SF-Onele (SF-T-ε A E X)
+SF-T-ε-Onele A E X (ret x) i j = refl
 
-PK-T-ε-not-Total : (A E X : Set) → ((A × X) ⊎ E) → PK-Total (PK-T-ε A E X) → ⊥
-PK-T-ε-not-Total A E X (inj₁ (a , x)) tot = tot (act a (ret x))
-PK-T-ε-not-Total A E X (inj₂ e) tot = tot (err e)
+SF-T-ε-not-Total : (A E X : Set) → ((A × X) ⊎ E) → SF-Total (SF-T-ε A E X) → ⊥
+SF-T-ε-not-Total A E X (inj₁ (a , x)) tot = tot (act a (ret x))
+SF-T-ε-not-Total A E X (inj₂ e) tot = tot (err e)
 
 -- The followinng could also be shown indirectly with rev:
-PK-T-ε-nat : (A E : Set) → {X Y : Set} → (f : PK-Hom X Y)
-  → PK-≡ (PK-∘ (PK-T A E f) (PK-T-ε A E Y)) (PK-∘ (PK-T-ε A E X) f)
-proj₁ (PK-T-ε-nat A E f) (ret x) (i , tt) = (tt , i) , refl
-proj₂ (PK-T-ε-nat A E f) (ret x) (tt , i) = (i , tt) , refl
+SF-T-ε-nat : (A E : Set) → {X Y : Set} → (f : SF X Y)
+  → SF≡ (SF-∘ (SF-T A E f) (SF-T-ε A E Y)) (SF-∘ (SF-T-ε A E X) f)
+proj₁ (SF-T-ε-nat A E f) (ret x) (i , tt) = (tt , i) , refl
+proj₂ (SF-T-ε-nat A E f) (ret x) (tt , i) = (i , tt) , refl
 
 
 
 
-PK-T-δ : (A E : Set) → (X : Set) → PK-Hom (Trace A E X) (Trace A E (Trace A E X))
-PK-T-δ A E X (ret x) = PK-Id _ (ret (ret x))
-PK-T-δ A E X (act a t) = join (PK-Id _ (ret (act a t)))
-                              (Pow-act a (Trace A E X) (PK-T-δ A E X t))
-PK-T-δ A E X (err e) = (⊤ ⊎ ⊤) , (λ { (inj₁ x) → ret (err e) ;
+SF-T-δ : (A E : Set) → (X : Set) → SF (Trace A E X) (Trace A E (Trace A E X))
+SF-T-δ A E X (ret x) = SF-id _ (ret (ret x))
+SF-T-δ A E X (act a t) = join (SF-id _ (ret (act a t)))
+                              (SL-act a (Trace A E X) (SF-T-δ A E X t))
+SF-T-δ A E X (err e) = (⊤ ⊎ ⊤) , (λ { (inj₁ x) → ret (err e) ;
                                  (inj₂ y) → err e})
 
 
-PK-T-δ-Total : (A E X : Set) → PK-Total (PK-T-δ A E X)
-PK-T-δ-Total A E X (ret x) = tt
-PK-T-δ-Total A E X (act a t) = inj₁ tt
-PK-T-δ-Total A E X (err e) = inj₁ tt
+SF-T-δ-Total : (A E X : Set) → SF-Total (SF-T-δ A E X)
+SF-T-δ-Total A E X (ret x) = tt
+SF-T-δ-Total A E X (act a t) = inj₁ tt
+SF-T-δ-Total A E X (err e) = inj₁ tt
 
 
-PK-T-δ-nat : (A E : Set) → {X Y : Set} → (f : PK-Hom X Y)
-  → PK-≡ (PK-∘ (PK-T A E f) (PK-T-δ A E Y)) (PK-∘ (PK-T-δ A E X) (PK-T A E (PK-T A E f)))
-proj₁ (PK-T-δ-nat A E f) (ret x) (i , tt) = (tt , i) , refl
-proj₁ (PK-T-δ-nat A E f) (act a t) (i , inj₁ tt) = ((inj₁ tt) , i) , refl
-proj₁ (PK-T-δ-nat A E f) (act a t) (i , inj₂ j)
-  with proj₁ (PK-T-δ-nat A E f) t (i , j)
+SF-T-δ-nat : (A E : Set) → {X Y : Set} → (f : SF X Y)
+  → SF≡ (SF-∘ (SF-T A E f) (SF-T-δ A E Y)) (SF-∘ (SF-T-δ A E X) (SF-T A E (SF-T A E f)))
+proj₁ (SF-T-δ-nat A E f) (ret x) (i , tt) = (tt , i) , refl
+proj₁ (SF-T-δ-nat A E f) (act a t) (i , inj₁ tt) = ((inj₁ tt) , i) , refl
+proj₁ (SF-T-δ-nat A E f) (act a t) (i , inj₂ j)
+  with proj₁ (SF-T-δ-nat A E f) t (i , j)
 ... | (u , v) , w = ((inj₂ u) , v) , (cong (act a) w)
-proj₁ (PK-T-δ-nat A E f) (err e) (tt , inj₁ tt) = ((inj₁ tt) , tt) , refl
-proj₁ (PK-T-δ-nat A E f) (err e) (tt , inj₂ tt) = ((inj₂ tt) , tt) , refl
-proj₂ (PK-T-δ-nat A E f) (ret x) (tt , i) = (i , tt) , refl
-proj₂ (PK-T-δ-nat A E f) (act a t) (inj₁ tt , j) = (j , (inj₁ tt)) , refl
-proj₂ (PK-T-δ-nat A E f) (act a t) (inj₂ i , j)
-  with proj₂ (PK-T-δ-nat A E f) t (i , j)
+proj₁ (SF-T-δ-nat A E f) (err e) (tt , inj₁ tt) = ((inj₁ tt) , tt) , refl
+proj₁ (SF-T-δ-nat A E f) (err e) (tt , inj₂ tt) = ((inj₂ tt) , tt) , refl
+proj₂ (SF-T-δ-nat A E f) (ret x) (tt , i) = (i , tt) , refl
+proj₂ (SF-T-δ-nat A E f) (act a t) (inj₁ tt , j) = (j , (inj₁ tt)) , refl
+proj₂ (SF-T-δ-nat A E f) (act a t) (inj₂ i , j)
+  with proj₂ (SF-T-δ-nat A E f) t (i , j)
 ... | (u , v) , w = (u , (inj₂ v)) , (cong (act a) w)
-proj₂ (PK-T-δ-nat A E f) (err e) (inj₁ tt , j) = (tt , (inj₁ tt)) , refl
-proj₂ (PK-T-δ-nat A E f) (err e) (inj₂ tt , j) = (tt , (inj₂ tt)) , refl
+proj₂ (SF-T-δ-nat A E f) (err e) (inj₁ tt , j) = (tt , (inj₁ tt)) , refl
+proj₂ (SF-T-δ-nat A E f) (err e) (inj₂ tt , j) = (tt , (inj₂ tt)) , refl
 
 
-PK-T-μ-rev :  (A E X : Set) → PK-≡ (PK-rev (PK-T-μ A E X)) (PK-T-δ A E X)
-proj₁ (PK-T-μ-rev A E X) (ret x) (ret .(ret x) , tt , refl) = tt , refl
-proj₁ (PK-T-μ-rev A E X) (act x t) (ret .(act x t) , tt , refl) = (inj₁ tt) , refl
-proj₁ (PK-T-μ-rev A E X) (err x) (ret .(err x) , tt , refl) = (inj₁ tt) , refl
-proj₁ (PK-T-μ-rev A E X) .(act a (Trace-μ A E X d)) (act a d , tt , refl)
-  with proj₁ (PK-T-μ-rev A E X) (Trace-μ A E X d) (d , (tt , refl))
+SF-T-μ-dag :  (A E X : Set) → SF≡ (SF-dag (SF-T-μ A E X)) (SF-T-δ A E X)
+proj₁ (SF-T-μ-dag A E X) (ret x) (ret .(ret x) , tt , refl) = tt , refl
+proj₁ (SF-T-μ-dag A E X) (act x t) (ret .(act x t) , tt , refl) = (inj₁ tt) , refl
+proj₁ (SF-T-μ-dag A E X) (err x) (ret .(err x) , tt , refl) = (inj₁ tt) , refl
+proj₁ (SF-T-μ-dag A E X) .(act a (Trace-μ A E X d)) (act a d , tt , refl)
+  with proj₁ (SF-T-μ-dag A E X) (Trace-μ A E X d) (d , (tt , refl))
 ... | u , v = (inj₂ u) , cong (act a) v
-proj₁ (PK-T-μ-rev A E X) .(err e) (err e , tt , refl) = (inj₂ tt) , refl
-proj₂ (PK-T-μ-rev A E X) (ret x) tt = ((ret (ret x)) , (tt , refl)) , refl
-proj₂ (PK-T-μ-rev A E X) (act a t) (inj₁ tt) = (ret (act a t) , tt , refl) , refl
-proj₂ (PK-T-μ-rev A E X) (act a t) (inj₂ y) with proj₂ (PK-T-μ-rev A E X) t y
+proj₁ (SF-T-μ-dag A E X) .(err e) (err e , tt , refl) = (inj₂ tt) , refl
+proj₂ (SF-T-μ-dag A E X) (ret x) tt = ((ret (ret x)) , (tt , refl)) , refl
+proj₂ (SF-T-μ-dag A E X) (act a t) (inj₁ tt) = (ret (act a t) , tt , refl) , refl
+proj₂ (SF-T-μ-dag A E X) (act a t) (inj₂ y) with proj₂ (SF-T-μ-dag A E X) t y
 ... | (d , tt , refl) , v = (act a d , tt , refl) , cong (act a) v
-proj₂ (PK-T-μ-rev A E X) (err e) (inj₁ tt) = (ret (err e) , (tt , refl)) , refl
-proj₂ (PK-T-μ-rev A E X) (err e) (inj₂ tt) = ((err e) , (tt , refl)) , refl
+proj₂ (SF-T-μ-dag A E X) (err e) (inj₁ tt) = (ret (err e) , (tt , refl)) , refl
+proj₂ (SF-T-μ-dag A E X) (err e) (inj₂ tt) = ((err e) , (tt , refl)) , refl
 
 
-PK-T-δ-asso : (A E X : Set) → PK-≡ (PK-∘ (PK-T-δ A E X) (PK-T-δ A E (Trace A E X)))
-                                   (PK-∘ (PK-T-δ A E X) (PK-T A E (PK-T-δ A E X)))
-proj₁ (PK-T-δ-asso A E X) (ret x) i = (tt , tt) , refl
-proj₁ (PK-T-δ-asso A E X) (act a t) (inj₁ i , j) = ((inj₁ tt) , (inj₁ tt)) , refl
-proj₁ (PK-T-δ-asso A E X) (act a t) (inj₂ i , inj₁ j) = ((inj₁ tt) , (inj₂ i)) , refl
-proj₁ (PK-T-δ-asso A E X) (act a t) (inj₂ i , inj₂ j)
-  with proj₁ (PK-T-δ-asso A E X) t (i , j)
+SF-T-δ-asso : (A E X : Set) → SF≡ (SF-∘ (SF-T-δ A E X) (SF-T-δ A E (Trace A E X)))
+                                   (SF-∘ (SF-T-δ A E X) (SF-T A E (SF-T-δ A E X)))
+proj₁ (SF-T-δ-asso A E X) (ret x) i = (tt , tt) , refl
+proj₁ (SF-T-δ-asso A E X) (act a t) (inj₁ i , j) = ((inj₁ tt) , (inj₁ tt)) , refl
+proj₁ (SF-T-δ-asso A E X) (act a t) (inj₂ i , inj₁ j) = ((inj₁ tt) , (inj₂ i)) , refl
+proj₁ (SF-T-δ-asso A E X) (act a t) (inj₂ i , inj₂ j)
+  with proj₁ (SF-T-δ-asso A E X) t (i , j)
 ... | (u , v) , eq = (inj₂ u , v) , cong (act a) eq
-proj₁ (PK-T-δ-asso A E X) (err e) (inj₁ i , j) = ((inj₁ tt) , (inj₁ tt)) , refl
-proj₁ (PK-T-δ-asso A E X) (err e) (inj₂ i , inj₁ j) = ((inj₁ tt) , (inj₂ tt)) , refl
-proj₁ (PK-T-δ-asso A E X) (err e) (inj₂ i , inj₂ j) = ((inj₂ tt) , tt) , refl
+proj₁ (SF-T-δ-asso A E X) (err e) (inj₁ i , j) = ((inj₁ tt) , (inj₁ tt)) , refl
+proj₁ (SF-T-δ-asso A E X) (err e) (inj₂ i , inj₁ j) = ((inj₁ tt) , (inj₂ tt)) , refl
+proj₁ (SF-T-δ-asso A E X) (err e) (inj₂ i , inj₂ j) = ((inj₂ tt) , tt) , refl
 
-proj₂ (PK-T-δ-asso A E X) (ret x) (i , j) = (tt , tt) , refl
-proj₂ (PK-T-δ-asso A E X) (act a t) (inj₁ tt , inj₁ tt) = ((inj₁ tt) , tt) , refl
-proj₂ (PK-T-δ-asso A E X) (act a t) (inj₁ tt , inj₂ j) = ((inj₂ j) , inj₁ tt) , refl
-proj₂ (PK-T-δ-asso A E X) (act a t) (inj₂ i , j)
-  with proj₂ (PK-T-δ-asso A E X) t (i , j)
+proj₂ (SF-T-δ-asso A E X) (ret x) (i , j) = (tt , tt) , refl
+proj₂ (SF-T-δ-asso A E X) (act a t) (inj₁ tt , inj₁ tt) = ((inj₁ tt) , tt) , refl
+proj₂ (SF-T-δ-asso A E X) (act a t) (inj₁ tt , inj₂ j) = ((inj₂ j) , inj₁ tt) , refl
+proj₂ (SF-T-δ-asso A E X) (act a t) (inj₂ i , j)
+  with proj₂ (SF-T-δ-asso A E X) t (i , j)
 ... | (u , v) , eq = (inj₂ u , inj₂ v) , cong (act a) eq
-proj₂ (PK-T-δ-asso A E X) (err x) (inj₁ i , inj₁ tt) = ((inj₁ tt) , tt) , refl
-proj₂ (PK-T-δ-asso A E X) (err x) (inj₁ i , inj₂ tt) = ((inj₂ i) , inj₁ tt) , refl
-proj₂ (PK-T-δ-asso A E X) (err x) (inj₂ i , j) = ((inj₂ tt) , (inj₂ tt)) , refl
+proj₂ (SF-T-δ-asso A E X) (err x) (inj₁ i , inj₁ tt) = ((inj₁ tt) , tt) , refl
+proj₂ (SF-T-δ-asso A E X) (err x) (inj₁ i , inj₂ tt) = ((inj₂ i) , inj₁ tt) , refl
+proj₂ (SF-T-δ-asso A E X) (err x) (inj₂ i , j) = ((inj₂ tt) , (inj₂ tt)) , refl
 
 -- Extra structure: The comomonad
 
-PK-T-ηε : (A E X : Set) → PK-≡ (PK-∘ (PK-T-η A E X) (PK-T-ε A E X)) (PK-Id X)
-PK-T-ηε A E X = (λ x i → tt , refl) , (λ x i → (tt , tt) , refl)
+SF-T-ηε : (A E X : Set) → SF≡ (SF-∘ (SF-T-η A E X) (SF-T-ε A E X)) (SF-id X)
+SF-T-ηε A E X = (λ x i → tt , refl) , (λ x i → (tt , tt) , refl)
 
 
-PK-T-ηδ : (A E X : Set) → PK-≡ (PK-∘ (PK-T-η A E X) (PK-T-δ A E X))
-                               (PK-∘ (PK-T-η A E X) (PK-T-η A E (Trace A E X)))
-PK-T-ηδ A E X = (λ x i → (tt , tt) , refl) , (λ x i → (tt , tt) , refl)
+SF-T-ηδ : (A E X : Set) → SF≡ (SF-∘ (SF-T-η A E X) (SF-T-δ A E X))
+                               (SF-∘ (SF-T-η A E X) (SF-T-η A E (Trace A E X)))
+SF-T-ηδ A E X = (λ x i → (tt , tt) , refl) , (λ x i → (tt , tt) , refl)
 
 
-PK-T-με : (A E X : Set) → PK-≡ (PK-∘ (PK-T-μ A E X) (PK-T-ε A E X))
-                               (PK-∘ (PK-T-ε A E (Trace A E X)) (PK-T-ε A E X))
-proj₁ (PK-T-με A E X) (ret t) (tt , i) = (tt , i) , refl
-proj₂ (PK-T-με A E X) (ret t) (tt , i) = (tt , i) , refl
+SF-T-με : (A E X : Set) → SF≡ (SF-∘ (SF-T-μ A E X) (SF-T-ε A E X))
+                               (SF-∘ (SF-T-ε A E (Trace A E X)) (SF-T-ε A E X))
+proj₁ (SF-T-με A E X) (ret t) (tt , i) = (tt , i) , refl
+proj₂ (SF-T-με A E X) (ret t) (tt , i) = (tt , i) , refl
 
 
-PK-T-δμ : (A E X : Set) → PK-≡ (PK-∘ (PK-T-δ A E X) (PK-T-μ A E X)) (PK-Id (Trace A E X))
+SF-T-δμ : (A E X : Set) → SF≡ (SF-∘ (SF-T-δ A E X) (SF-T-μ A E X)) (SF-id (Trace A E X))
 
-proj₁ (PK-T-δμ A E X) (ret x) i = tt , refl
-proj₁ (PK-T-δμ A E X) (act a t) (inj₁ tt , tt) = tt , refl
-proj₁ (PK-T-δμ A E X) (act a t) (inj₂ i , tt)
-  with proj₁ (PK-T-δμ A E X) t (i , tt)
+proj₁ (SF-T-δμ A E X) (ret x) i = tt , refl
+proj₁ (SF-T-δμ A E X) (act a t) (inj₁ tt , tt) = tt , refl
+proj₁ (SF-T-δμ A E X) (act a t) (inj₂ i , tt)
+  with proj₁ (SF-T-δμ A E X) t (i , tt)
 ... | tt , eq = tt , cong (act a) eq
-proj₁ (PK-T-δμ A E X) (err e) (inj₁ tt , tt) = tt , refl
-proj₁ (PK-T-δμ A E X) (err e) (inj₂ tt , tt) = tt , refl
+proj₁ (SF-T-δμ A E X) (err e) (inj₁ tt , tt) = tt , refl
+proj₁ (SF-T-δμ A E X) (err e) (inj₂ tt , tt) = tt , refl
 
-proj₂ (PK-T-δμ A E X) (ret x) i = (tt , tt) , refl
-proj₂ (PK-T-δμ A E X) (act a t) i = ((inj₁ tt) , tt) , refl
-proj₂ (PK-T-δμ A E X) (err e) tt = ((inj₁ tt) , tt) , refl
-
-
+proj₂ (SF-T-δμ A E X) (ret x) i = (tt , tt) , refl
+proj₂ (SF-T-δμ A E X) (act a t) i = ((inj₁ tt) , tt) , refl
+proj₂ (SF-T-δμ A E X) (err e) tt = ((inj₁ tt) , tt) , refl
 
 
-PK-T-χ : (A E X : Set) → PK-Hom (Trace A E (Trace A E X)) (Trace A E (Trace A E X))
-PK-T-χ A E X = PK-∘ (PK-T-μ A E X) (PK-T-δ A E X)
 
 
--- PK-T-><> : (A E X : Set) → PK-≡ (PK-∘ (PK-T A E (PK-T-δ A E X))
---   (PK-∘ (PK-T-χ A E (Trace A E X)) (PK-T A E (PK-T-μ A E X))))
---   (PK-T-χ A E X)
+SF-T-χ : (A E X : Set) → SF (Trace A E (Trace A E X)) (Trace A E (Trace A E X))
+SF-T-χ A E X = SF-∘ (SF-T-μ A E X) (SF-T-δ A E X)
 
--- proj₁ (PK-T-><> A E X) (ret (ret x)) (tt , (tt , tt) , tt) = (tt , tt) , refl
--- proj₁ (PK-T-><> A E X) (ret (act a t)) (inj₁ tt , (tt , tt) , tt) = (tt , (inj₁ tt)) , refl
--- proj₁ (PK-T-><> A E X) (ret (act a t)) (inj₂ i , (tt , inj₁ tt) , p) = (tt , (inj₁ tt)) ,
---   cong ret (cong (act a) (proj₂ (proj₁ (PK-T-δμ A E X) t (i , tt))))
--- proj₁ (PK-T-><> A E X) (ret (act a t)) (inj₂ i , (tt , inj₂ j) , p)
---   with proj₁ (PK-T-><> A E X) (ret t) (i , (tt , j) , p)
+
+-- SF-T-><> : (A E X : Set) → SF≡ (SF-∘ (SF-T A E (SF-T-δ A E X))
+--   (SF-∘ (SF-T-χ A E (Trace A E X)) (SF-T A E (SF-T-μ A E X))))
+--   (SF-T-χ A E X)
+
+-- proj₁ (SF-T-><> A E X) (ret (ret x)) (tt , (tt , tt) , tt) = (tt , tt) , refl
+-- proj₁ (SF-T-><> A E X) (ret (act a t)) (inj₁ tt , (tt , tt) , tt) = (tt , (inj₁ tt)) , refl
+-- proj₁ (SF-T-><> A E X) (ret (act a t)) (inj₂ i , (tt , inj₁ tt) , p) = (tt , (inj₁ tt)) ,
+--   cong ret (cong (act a) (proj₂ (proj₁ (SF-T-δμ A E X) t (i , tt))))
+-- proj₁ (SF-T-><> A E X) (ret (act a t)) (inj₂ i , (tt , inj₂ j) , p)
+--   with proj₁ (SF-T-><> A E X) (ret t) (i , (tt , j) , p)
 -- ... | (tt , u) , w = (tt , (inj₂ u)) , (cong (act a) w)
--- proj₁ (PK-T-><> A E X) (ret (err e)) (inj₁ tt , (tt , tt) , tt) = (tt , (inj₁ tt)) , refl
--- proj₁ (PK-T-><> A E X) (ret (err e)) (inj₂ tt , (tt , inj₁ tt) , tt) =
+-- proj₁ (SF-T-><> A E X) (ret (err e)) (inj₁ tt , (tt , tt) , tt) = (tt , (inj₁ tt)) , refl
+-- proj₁ (SF-T-><> A E X) (ret (err e)) (inj₂ tt , (tt , inj₁ tt) , tt) =
 --   (tt , (inj₁ tt)) , refl
--- proj₁ (PK-T-><> A E X) (ret (err e)) (inj₂ tt , (tt , inj₂ tt) , tt) =
+-- proj₁ (SF-T-><> A E X) (ret (err e)) (inj₂ tt , (tt , inj₂ tt) , tt) =
 --   (tt , (inj₂ tt)) , refl
--- proj₁ (PK-T-><> A E X) (act a d) (i , (tt , inj₁ tt) , tt) = (tt , (inj₁ tt)) ,
---   (cong ret (cong (act a) {!PK-T-μ-as!}))
--- proj₁ (PK-T-><> A E X) (act a d) (i , (tt , inj₂ j) , p) = {!!}
--- proj₁ (PK-T-><> A E X) (err e) (i , (j , l) , p) = {!!}
+-- proj₁ (SF-T-><> A E X) (act a d) (i , (tt , inj₁ tt) , tt) = (tt , (inj₁ tt)) ,
+--   (cong ret (cong (act a) {!SF-T-μ-as!}))
+-- proj₁ (SF-T-><> A E X) (act a d) (i , (tt , inj₂ j) , p) = {!!}
+-- proj₁ (SF-T-><> A E X) (err e) (i , (j , l) , p) = {!!}
 
--- proj₂ (PK-T-><> A E X) d i = {!!}
+-- proj₂ (SF-T-><> A E X) d i = {!!}
 
 
 
@@ -344,34 +340,34 @@ PK-T-χ A E X = PK-∘ (PK-T-μ A E X) (PK-T-δ A E X)
 Maybe : Set → Set
 Maybe X = X ⊎ ⊤
 
-PK-M : {X Y : Set} → (PK-Hom X Y) → (PK-Hom (Maybe X) (Maybe Y))
-PK-M f (inj₁ x) = (proj₁ (f x)) , (λ i → inj₁ (proj₂ (f x) i))
-PK-M f (inj₂ y) = ⊤ , (λ x → inj₂ tt)
+SF-M : {X Y : Set} → (SF X Y) → (SF (Maybe X) (Maybe Y))
+SF-M f (inj₁ x) = (proj₁ (f x)) , (λ i → inj₁ (proj₂ (f x) i))
+SF-M f (inj₂ y) = ⊤ , (λ x → inj₂ tt)
 
 
-PK-M-η : (X : Set) → PK-Hom X (Maybe X)
-PK-M-η X = PK-Fun inj₁
+SF-M-η : (X : Set) → SF X (Maybe X)
+SF-M-η X = SF-Fun inj₁
 
-PK-M-μ : (X : Set) → PK-Hom (Maybe (Maybe X)) (Maybe X)
-PK-M-μ X (inj₁ x) = PK-Id _ x
-PK-M-μ X (inj₂ y) = PK-Id _ (inj₂ tt)
+SF-M-μ : (X : Set) → SF (Maybe (Maybe X)) (Maybe X)
+SF-M-μ X (inj₁ x) = SF-id _ x
+SF-M-μ X (inj₂ y) = SF-id _ (inj₂ tt)
 
 
 -- Error
 Error : Set → Set → Set
 Error E X = X ⊎ E
 
-PK-E : (E : Set) → {X Y : Set} → (PK-Hom X Y) → (PK-Hom (Error E X) (Error E Y))
-PK-E E f (inj₁ x) = (proj₁ (f x)) , (λ i → inj₁ (proj₂ (f x) i))
-PK-E E f (inj₂ e) = ⊤ , (λ x → inj₂ e)
+SF-E : (E : Set) → {X Y : Set} → (SF X Y) → (SF (Error E X) (Error E Y))
+SF-E E f (inj₁ x) = (proj₁ (f x)) , (λ i → inj₁ (proj₂ (f x) i))
+SF-E E f (inj₂ e) = ⊤ , (λ x → inj₂ e)
 
 
 
-PK-T-in : {A E X Y : Set} → (f : PK-Hom X Y) → (PK-Total f) → (t : Trace A E X)
-  → proj₁ (PK-T A E f t)
-PK-T-in f f-tot (ret x) = f-tot x
-PK-T-in f f-tot (act x t) = PK-T-in f f-tot t
-PK-T-in f f-tot (err x) = tt
+SF-T-in : {A E X Y : Set} → (f : SF X Y) → (SF-Total f) → (t : Trace A E X)
+  → proj₁ (SF-T A E f t)
+SF-T-in f f-tot (ret x) = f-tot x
+SF-T-in f f-tot (act x t) = SF-T-in f f-tot t
+SF-T-in f f-tot (err x) = tt
 
 
 
@@ -379,23 +375,23 @@ PK-T-in f f-tot (err x) = tt
 
 -- -- Partial Runners
 -- T-Runner : (A E S : Set) → Set₁
--- T-Runner A E S = (A → PK-Hom S (Maybe S))
+-- T-Runner A E S = (A → SF S (Maybe S))
 
 -- T-Runner-Total : {A E S : Set} → T-Runner A E S → Set
--- T-Runner-Total {A} θ = (a : A) → PK-Total (θ a)
+-- T-Runner-Total {A} θ = (a : A) → SF-Total (θ a)
 
 -- T-Runner-map : {A E : Set} → (S : Set) → (θ : T-Runner A E S)
---   → (X : Set) → (s : S) → PK-Hom (Trace A E X) (Maybe (S × X))
--- T-Runner-map S θ X s (ret x) = PK-Id _ (inj₁ (s , x))
--- T-Runner-map S θ X s (act a t) = Pow-κ _ _
---   (λ {(inj₁ z) → T-Runner-map S θ X z t ; (inj₂ tt) → PK-Id _ (inj₂ tt)}) (θ a s)
--- T-Runner-map S θ X s (err x) = PK-Id _ (inj₂ tt)
+--   → (X : Set) → (s : S) → SF (Trace A E X) (Maybe (S × X))
+-- T-Runner-map S θ X s (ret x) = SF-id _ (inj₁ (s , x))
+-- T-Runner-map S θ X s (act a t) = SL-κ _ _
+--   (λ {(inj₁ z) → T-Runner-map S θ X z t ; (inj₂ tt) → SF-id _ (inj₂ tt)}) (θ a s)
+-- T-Runner-map S θ X s (err x) = SF-id _ (inj₂ tt)
 
 
 
 -- T-Runner-map-Total : {A E : Set} → (S : Set)
 --   → (θ : T-Runner A E S) → (T-Runner-Total {A} {E} {S} θ)
---   → (X : Set) → (s : S) → PK-Total (T-Runner-map {A} {E} S θ X s)
+--   → (X : Set) → (s : S) → SF-Total (T-Runner-map {A} {E} S θ X s)
 -- T-Runner-map-Total S θ θ-tot X s (ret x) = tt
 -- proj₁ (T-Runner-map-Total S θ θ-tot X s (act x t)) = θ-tot x s
 -- proj₂ (T-Runner-map-Total S θ θ-tot X s (act x t)) with (proj₂ (θ x s) (θ-tot x s))
@@ -405,9 +401,9 @@ PK-T-in f f-tot (err x) = tt
 
 
 -- T-Runner-map-nat< : {A E : Set} → (S : Set) → (θ : T-Runner A E S)
---   → {X Y : Set} → (f : PK-Hom X Y) → (s : S)
---   → Pow-< (PK-∘ (PK-T A E f) (T-Runner-map S θ Y s))
---           (PK-∘ (T-Runner-map S θ X s) (PK-M (PK-Id S ⊗ f)))
+--   → {X Y : Set} → (f : SF X Y) → (s : S)
+--   → SF≤ (SF-∘ (SF-T A E f) (T-Runner-map S θ Y s))
+--           (SF-∘ (T-Runner-map S θ X s) (SF-M (SF-id S ⊗ f)))
 -- T-Runner-map-nat< S θ f s (ret x) (i , tt) = (tt , (tt , i)) , refl
 -- proj₁ (proj₁ (proj₁ (T-Runner-map-nat< S θ f s (act x t) (i , j , k)))) = j
 -- proj₂ (proj₁ (proj₁ (T-Runner-map-nat< S θ f s (act x t) (i , j , k)))) with proj₂ (θ x s) j
@@ -423,15 +419,15 @@ PK-T-in f f-tot (err x) = tt
 
 
 -- T-Runner-map-T-nat> : {A E : Set} → (S : Set) → (θ : T-Runner A E S)
---   → {X Y : Set} → (f : PK-Hom X Y) → (PK-Total f) → (s : S)
---   → Pow-< (PK-∘ (T-Runner-map S θ X s) (PK-M (PK-Id S ⊗ f)))
---           (PK-∘ (PK-T A E f) (T-Runner-map S θ Y s))
+--   → {X Y : Set} → (f : SF X Y) → (SF-Total f) → (s : S)
+--   → SF≤ (SF-∘ (T-Runner-map S θ X s) (SF-M (SF-id S ⊗ f)))
+--           (SF-∘ (SF-T A E f) (T-Runner-map S θ Y s))
           
 -- T-Runner-map-T-nat> S θ f f-tot s (ret x) (tt , tt , j) = (j , tt) , refl
 -- proj₁ (proj₁ (T-Runner-map-T-nat> S θ f f-tot s (act x t) ((i , j) , k)))
 --   with proj₂ (θ x s) i
 -- ... | inj₁ a = proj₁ (proj₁ (T-Runner-map-T-nat> S θ f f-tot a t (j , k)))
--- ... | inj₂ b = PK-T-in f f-tot t
+-- ... | inj₂ b = SF-T-in f f-tot t
 -- proj₁ (proj₂ (proj₁ (T-Runner-map-T-nat> S θ f f-tot s (act x t) ((i , j) , k)))) = i
 -- proj₂ (proj₂ (proj₁ (T-Runner-map-T-nat> S θ f f-tot s (act x t) ((i , j) , k))))
 --   with proj₂ (θ x s) i
@@ -443,17 +439,17 @@ PK-T-in f f-tot (err x) = tt
 -- T-Runner-map-T-nat> S θ f f-tot s (err x) (i , j) = (tt , tt) , refl
 
 -- T-Runner-map-T-nat : {A E : Set} → (S : Set) → (θ : T-Runner A E S)
---   → {X Y : Set} → (f : PK-Hom X Y) → (PK-Total f) → (s : S)
---   → PK-≡ (PK-∘ (PK-T A E f) (T-Runner-map S θ Y s))
---          (PK-∘ (T-Runner-map S θ X s) (PK-M (PK-Id S ⊗ f)))
+--   → {X Y : Set} → (f : SF X Y) → (SF-Total f) → (s : S)
+--   → SF≡ (SF-∘ (SF-T A E f) (T-Runner-map S θ Y s))
+--          (SF-∘ (T-Runner-map S θ X s) (SF-M (SF-id S ⊗ f)))
 -- T-Runner-map-T-nat S θ f f-tot s = T-Runner-map-nat< S θ f s ,
 --                                    T-Runner-map-T-nat> S θ f f-tot s
 
 
 -- T-Runner-map-η : {A E : Set} → (S : Set) → (θ : T-Runner A E S)
 --   → (X : Set) → (s : S)
---   → PK-≡ (PK-∘ (PK-T-η A E X) (T-Runner-map S θ X s))
---          (PK-∘ (PK-Fun (λ x → (s , x))) (PK-M-η (S × X)))
+--   → SF≡ (SF-∘ (SF-T-η A E X) (T-Runner-map S θ X s))
+--          (SF-∘ (SF-Fun (λ x → (s , x))) (SF-M-η (S × X)))
 -- proj₁ (T-Runner-map-η S θ X s) x i = (tt , tt) , refl
 -- proj₂ (T-Runner-map-η S θ X s) x i = (tt , tt) , refl
 
@@ -462,9 +458,9 @@ PK-T-in f f-tot (err x) = tt
 
 -- T-Runner-map-μ : {A E : Set} → (S : Set) → (θ : T-Runner A E S)
 --   → (X : Set) → (s : S)
---   → PK-≡ (PK-∘ (PK-T-μ A E X) (T-Runner-map S θ X s))
---          (PK-∘ (T-Runner-map S θ (Trace A E X) s)
---                (PK-∘ (PK-M (cur (T-Runner-map S θ X))) (PK-M-μ (S × X))))
+--   → SF≡ (SF-∘ (SF-T-μ A E X) (T-Runner-map S θ X s))
+--          (SF-∘ (T-Runner-map S θ (Trace A E X) s)
+--                (SF-∘ (SF-M (cur (T-Runner-map S θ X))) (SF-M-μ (S × X))))
 
 -- proj₁ (T-Runner-map-μ S θ X s) (ret t) (tt , i) = (tt , (i , tt)) , refl
 -- proj₁ (proj₁ (proj₁ (proj₁ (T-Runner-map-μ S θ X s) (act a d) (tt , i , j)))) = i
@@ -494,28 +490,28 @@ PK-T-in f f-tot (err x) = tt
 -- proj₂ (T-Runner-map-μ S θ X s) (err e) (tt , tt , tt) = (tt , tt) , refl
 
 
--- -- PK-T-ε : (A E : Set) → (X : Set) → PK-Hom (Trace A E X) X
--- -- PK-T-ε A E X (ret x) = PK-Id X x
--- -- PK-T-ε A E X (act x t) = ⊥ , (λ ())
+-- -- SF-T-ε : (A E : Set) → (X : Set) → SF (Trace A E X) X
+-- -- SF-T-ε A E X (ret x) = SF-id X x
+-- -- SF-T-ε A E X (act x t) = ⊥ , (λ ())
 
--- -- PK-T-η<>ε : (A E X : Set) → PK-≡ (PK-T-ε A E X) (PK-rev (PK-T-η A E X))
--- -- proj₁ (PK-T-η<>ε A E X) (ret x) tt = (x , (tt , refl)) , refl
--- -- proj₂ (PK-T-η<>ε A E X) (ret x) (.x , tt , refl) = tt , refl
-
-
--- -- PK-T-δ : (A E : Set) → (X : Set) → PK-Hom (Trace A E X) (Trace A E (Trace A E X))
--- -- PK-T-δ A E X (ret x) = PK-Id (Trace A E (Trace A E X)) (ret (ret x))
--- -- PK-T-δ A E X (act a t) = join (PK-Id (Trace A E (Trace A E X)) (ret (act a t)))
--- --                             (Pow-act a (Trace A E X) (PK-T-δ A E X t))
+-- -- SF-T-η<>ε : (A E X : Set) → SF≡ (SF-T-ε A E X) (SF-dag (SF-T-η A E X))
+-- -- proj₁ (SF-T-η<>ε A E X) (ret x) tt = (x , (tt , refl)) , refl
+-- -- proj₂ (SF-T-η<>ε A E X) (ret x) (.x , tt , refl) = tt , refl
 
 
--- -- PK-T-μ<>δ : (A E X : Set) → PK-≡ (PK-T-δ A E X) (PK-rev (PK-T-μ A E X))
--- -- proj₁ (PK-T-μ<>δ A E X) (ret x) tt = (ret (ret x) , tt , refl) , refl
--- -- proj₁ (PK-T-μ<>δ A E X) (act a t) (inj₁ i) = ((ret (act a t)) , (tt , refl)) , refl
--- -- proj₁ (PK-T-μ<>δ A E X) (act a t) (inj₂ i) with (proj₁ (PK-T-μ<>δ A E X) t i)
+-- -- SF-T-δ : (A E : Set) → (X : Set) → SF (Trace A E X) (Trace A E (Trace A E X))
+-- -- SF-T-δ A E X (ret x) = SF-id (Trace A E (Trace A E X)) (ret (ret x))
+-- -- SF-T-δ A E X (act a t) = join (SF-id (Trace A E (Trace A E X)) (ret (act a t)))
+-- --                             (SL-act a (Trace A E X) (SF-T-δ A E X t))
+
+
+-- -- SF-T-μ<>δ : (A E X : Set) → SF≡ (SF-T-δ A E X) (SF-dag (SF-T-μ A E X))
+-- -- proj₁ (SF-T-μ<>δ A E X) (ret x) tt = (ret (ret x) , tt , refl) , refl
+-- -- proj₁ (SF-T-μ<>δ A E X) (act a t) (inj₁ i) = ((ret (act a t)) , (tt , refl)) , refl
+-- -- proj₁ (SF-T-μ<>δ A E X) (act a t) (inj₂ i) with (proj₁ (SF-T-μ<>δ A E X) t i)
 -- -- ... | (d , p , v) , eq = (act a d , (p , cong (act a) v)) , cong (act a) eq
--- -- proj₂ (PK-T-μ<>δ A E X) (ret x) (ret .(ret x) , tt , refl) = tt , refl
--- -- proj₂ (PK-T-μ<>δ A E X) (act a t) (ret .(act a t) , tt , refl) = (inj₁ tt) , refl
--- -- proj₂ (PK-T-μ<>δ A E X) (act a .(proj₂ (PK-T-μ A E X d) i)) (act .a d , i , refl)
--- --   with proj₂ (PK-T-μ<>δ A E X) (proj₂ (PK-T-μ A E X d) i) (d , i , refl)
+-- -- proj₂ (SF-T-μ<>δ A E X) (ret x) (ret .(ret x) , tt , refl) = tt , refl
+-- -- proj₂ (SF-T-μ<>δ A E X) (act a t) (ret .(act a t) , tt , refl) = (inj₁ tt) , refl
+-- -- proj₂ (SF-T-μ<>δ A E X) (act a .(proj₂ (SF-T-μ A E X d) i)) (act .a d , i , refl)
+-- --   with proj₂ (SF-T-μ<>δ A E X) (proj₂ (SF-T-μ A E X d) i) (d , i , refl)
 -- -- ... | j , eq = (inj₂ j) , (cong (act a) eq)

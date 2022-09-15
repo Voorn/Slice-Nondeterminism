@@ -8,8 +8,11 @@ open import Data.Product renaming (map to map×)
 open import Relation.Binary.PropositionalEquality hiding ([_])
 
 
-open import Index-Nondeterminism
-open import Monoidal
+open import Slice.Base
+open import Slice.Lattice
+
+open import Slice-Functions.Base
+open import Slice-Functions.Monoidal
 open import Monads.Trace
 
 open import Runner.Trace-Runner
@@ -18,40 +21,40 @@ open import Runner.Trace-Runner
 
 --
 State-Mach : (A K : Set) → Set₁
-State-Mach A K = PK-Hom (A × K) K
+State-Mach A K = SF (A × K) K
 
 
 
 Run-map : (A E K : Set) → Set₁
-Run-map A E K = (X : Set) → K → PK-Hom (Trace A E X) (K × X)
+Run-map A E K = (X : Set) → K → SF (Trace A E X) (K × X)
 
 Run-map-nat : {A E : Set} → (K : Set) → (Run-map A E K) → Set₁
-Run-map-nat K ϕ = {X Y : Set} → (f : PK-Hom X Y) → (k : K)
-  → PK-≡ (PK-∘ (PK-T _ _ f) (ϕ Y k))
-          (PK-∘ (ϕ X k) (PK-Id K ⊗ f))
+Run-map-nat K ϕ = {X Y : Set} → (f : SF X Y) → (k : K)
+  → SF≡ (SF-∘ (SF-T _ _ f) (ϕ Y k))
+          (SF-∘ (ϕ X k) (SF-id K ⊗ f))
 
 Run-map-η : {A E : Set} → (K : Set) → (Run-map A E K) → Set₁
 Run-map-η K ϕ = (X : Set) → (k : K)
-  → PK-≡ (PK-∘ (PK-T-η _ _ X) (ϕ X k))
-         (PK-Fun (λ x → (k , x)))
+  → SF≡ (SF-∘ (SF-T-η _ _ X) (ϕ X k))
+         (SF-Fun (λ x → (k , x)))
 
 Run-map-μ : {A E : Set} → (K : Set) → (Run-map A E K) → Set₁
 Run-map-μ K ϕ = (X : Set) → (k : K)
-  → PK-≡ (PK-∘ (PK-T-μ _ _ X) (ϕ X k))
-         (PK-∘ (ϕ (Trace _ _ X) k)
+  → SF≡ (SF-∘ (SF-T-μ _ _ X) (ϕ X k))
+         (SF-∘ (ϕ (Trace _ _ X) k)
                (cur (ϕ X)))
 
 Run-map-κ : {A E : Set} → (K : Set) → (Run-map A E K) → Set₁
 Run-map-κ K ϕ = (X Y : Set) → (k : K)
   → (f : X → (Trace _ _ Y))
-  → PK-≡ (PK-∘ (PK-Fun (Trace-κ _ _ X Y f)) (ϕ Y k))
-         (PK-∘ (ϕ X k) (λ {(u , x) → ϕ Y u (f x)}))
+  → SF≡ (SF-∘ (SF-Fun (Trace-κ _ _ X Y f)) (ϕ Y k))
+         (SF-∘ (ϕ X k) (λ {(u , x) → ϕ Y u (f x)}))
 
 State-Mach-map : (A E K : Set) → State-Mach A K → Run-map A E K
-State-Mach-map A E K θ X k (ret x) = PK-Id _ (k , x)
+State-Mach-map A E K θ X k (ret x) = SF-id _ (k , x)
 State-Mach-map A E K θ X k (act a t) =
-  Pow-κ K (K × X) (λ u → State-Mach-map A E K θ X u t) (θ (a , k))
-State-Mach-map A E K θ X k (err e) = Pow-⊥ (K × X)
+  SL-* {K} {K × X} (λ u → State-Mach-map A E K θ X u t) (θ (a , k))
+State-Mach-map A E K θ X k (err e) = SL-⊥ (K × X)
 
 
 SMA-map-nat : (A E K : Set) → (θ : State-Mach A K)
@@ -84,11 +87,11 @@ proj₂ (SMA-map-μ A E K θ X k) (act a d) ((i , j) , l)
 
 
 SMA-extract : (A E K : Set) → Run-map A E K → State-Mach A K
-SMA-extract A E K ϕ (a , k) = Pow→ proj₁ (ϕ ⊤ k (act a (ret tt)))
+SMA-extract A E K ϕ (a , k) = SL-fun proj₁ (ϕ ⊤ k (act a (ret tt)))
 
 
 SMA-extract-sound : (A E K : Set) → (θ : State-Mach A K)
-  → PK-≡ (SMA-extract A E K (State-Mach-map A E K θ)) θ
+  → SF≡ (SMA-extract A E K (State-Mach-map A E K θ)) θ
 proj₁ (SMA-extract-sound A E K θ) (a , k) (i , tt) = i , refl
 proj₂ (SMA-extract-sound A E K θ) (a , k) i = (i , tt) , refl
 

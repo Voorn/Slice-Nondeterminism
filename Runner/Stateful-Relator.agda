@@ -9,8 +9,6 @@ open import Data.Product renaming (map to map×)
 open import Relation.Binary.PropositionalEquality hiding ([_])
 
 
-open import Index-Nondeterminism
-open import Monoidal
 
 open import Monads.Trace
 open import Runner.Trace-Runner
@@ -21,13 +19,13 @@ open import Runner.Trace-Relator
 Rela-run-pres : {U V A E K : Set}
   → (Runner-map U V A E K) → (Rel K K) → (Trace-Relator A E) → Set₁
 Rela-run-pres θ CR Γ = {X : Set} → (a b : _) → (CR a b)
-  → (t : Trace _ _ X) → Pow-Relator Γ (Rel× CR _≡_) (θ _ a t) (θ _ b t)
+  → (t : Trace _ _ X) → SL-Relator Γ (Rel× CR _≡_) (θ _ a t) (θ _ b t)
 
 -- Relator dependent on starting state
 Local-Relator : {A E B F : Set} 
   → (Γ : Trace-Relator B F) → (K : Set)
   → (Runner-map A E B F K) → (CR : Rel K K) → K → Trace-Relator A E 
-Local-Relator Γ K ϕ CR k R a b = Pow-Relator Γ (Rel× CR R) (ϕ _ k a) (ϕ _ k b)
+Local-Relator Γ K ϕ CR k R a b = SL-Relator Γ (Rel× CR R) (ϕ _ k a) (ϕ _ k b)
 
 
 -- The local relator is a relator
@@ -154,7 +152,7 @@ WR-η Γ prop Γ-η θ θ-η CR CR-prop W R x y xRy k Wk =
 -- Global relator (World relator on the full subset of states) is monadic if:
 -- the relator Γ distributes over the non-empty powerset relator, and the θ runner is total
 
-GR-μ : {A E B F K : Set} → (Γ : Trace-Relator B F) → (TRel-prop Γ) → (TRel-Pow Γ)
+GR-μ : {A E B F K : Set} → (Γ : Trace-Relator B F) → (TRel-prop Γ) → (TRel-SL Γ)
   → (θ : Runner-map A E B F K) → (Runner-map-S-nat K θ) → (Runner-map-μ K θ)
        → (Runner-map-Total _ θ)
   → (CR : Rel K K) → (Rela-preo CR) → (Rela-run-pres θ CR Γ)
@@ -166,7 +164,7 @@ GR-μ Γ prop Γ-P θ θ-sn θ-μ θ-tot CR CR-preo CR-rp R d e d-e k tt i
 ... | p , t-r with proj₂ (θ _ k d) j
 ... | t with TRel-prop.Γ-sub prop (Rel× CR (World-Relator Γ _ θ CR (λ _ → ⊤) R))
 -- The following is maybe nicer as a lemma
-  (λ tu rv → Pow-Relator Γ (Rel× CR R) (cur (θ _) tu) (cur (θ _) rv))
+  (λ tu rv → SL-Relator Γ (Rel× CR R) (cur (θ _) tu) (cur (θ _) rv))
     (λ {(u , a) (v , b) (u-v , a-b) i₁ →
       (proj₁ (a-b v tt (proj₁ (CR-rp u v u-v a i₁)))) ,
         (TRel-prop.Γ-sub prop (Rela-comp (Rel× CR _≡_) (Rel× CR R)) (Rel× CR R)

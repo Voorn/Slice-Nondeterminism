@@ -1,4 +1,4 @@
-module Interleaving.Parallel-Monoidal where
+module Parallel.Monoidal where
 
 open import Data.Unit
 open import Data.Empty
@@ -8,24 +8,24 @@ open import Data.Product renaming (map to map×)
 open import Relation.Binary.PropositionalEquality hiding ([_])
 
 
-open import Index-Nondeterminism
-open import Monoidal
+open import Slice-Functions.Base
+open import Slice-Functions.Monoidal
 open import Monads.Trace
 
-open import Interleaving.Parallel
+open import Parallel.Base
 
 
 
 -- Pseudomonoidal monad
-ℙ-monoid-unit : (A E X Y : Set) → PK-≡ (PK-∘ (PK-T-η A E X ⊗ PK-T-η A E Y) (ℙ A E X Y))
-                                             (PK-T-η A E (X × Y))
+ℙ-monoid-unit : (A E X Y : Set) → SF≡ (SF-∘ (SF-T-η A E X ⊗ SF-T-η A E Y) (ℙ A E X Y))
+                                             (SF-T-η A E (X × Y))
 ℙ-monoid-unit A E X Y = (λ { p (i , inj₁ tt) → tt , refl ; p (i , inj₂ tt) → tt , refl}) ,
                         λ x i → ((tt , tt) , (inj₁ tt)) , refl
 
 
 ℙ-pseudo-mult : (A E X Y : Set)
-  → Pow-< (PK-∘ (ℙ A E _ _) (PK-∘ (PK-T A E (ℙ A E X Y)) (PK-T-μ A E _)))
-          (PK-∘ (PK-T-μ A E X ⊗ PK-T-μ A E Y) (ℙ A E X Y))
+  → SF≤ (SF-∘ (ℙ A E _ _) (SF-∘ (SF-T A E (ℙ A E X Y)) (SF-T-μ A E _)))
+          (SF-∘ (SF-T-μ A E X ⊗ SF-T-μ A E Y) (ℙ A E X Y))
 ℙ-pseudo-mult A E X Y (act a d , q) (inj₁ i , j , tt)
   with ℙ-pseudo-mult A E X Y (d , q) (i , (j , tt))
 ... | (u , v) , eq = ((tt , tt) , (inj₁ v)) , cong (act a) eq
@@ -47,20 +47,20 @@ open import Interleaving.Parallel
 
 
 -- Monoidal comonad (dependent on naturality of ℙ)
-ℙ-moncom-unit : (A E X Y : Set) → PK-≡ (PK-∘ (ℙ A E X Y) (PK-T-ε A E (X × Y)))
-  (PK-T-ε A E X ⊗ PK-T-ε A E Y)
+ℙ-moncom-unit : (A E X Y : Set) → SF≡ (SF-∘ (ℙ A E X Y) (SF-T-ε A E (X × Y)))
+  (SF-T-ε A E X ⊗ SF-T-ε A E Y)
 proj₁ (ℙ-moncom-unit A E X Y) (ret x , ret y) (inj₁ i , j) = (tt , tt) , refl
 proj₁ (ℙ-moncom-unit A E X Y) (ret x , ret y) (inj₂ i , j) = (tt , tt) , refl
 proj₂ (ℙ-moncom-unit A E X Y) (ret x , ret y) (i , j) = ((inj₁ tt) , tt) , refl
 
 
 
-ℙ-moncom-mult< : (A E X Y : Set) → Pow-< (PK-∘ (ℙ A E X Y) (PK-T-δ A E (X × Y)))
-  (PK-∘ (PK-T-δ A E X ⊗ PK-T-δ A E Y) (PK-∘ (ℙ A E _ _) (PK-T A E (ℙ A E X Y))))
-ℙ-moncom-mult𝕃< : (A E X Y : Set) → Pow-< (PK-∘ (𝕃 A E X Y) (PK-T-δ A E (X × Y)))
-  (PK-∘ (PK-T-δ A E X ⊗ PK-T-δ A E Y) (PK-∘ (ℙ A E _ _) (PK-T A E (ℙ A E X Y))))
-ℙ-moncom-multℝ< : (A E X Y : Set) → Pow-< (PK-∘ (ℝ A E X Y) (PK-T-δ A E (X × Y)))
-  (PK-∘ (PK-T-δ A E X ⊗ PK-T-δ A E Y) (PK-∘ (ℙ A E _ _) (PK-T A E (ℙ A E X Y))))
+ℙ-moncom-mult< : (A E X Y : Set) → SF≤ (SF-∘ (ℙ A E X Y) (SF-T-δ A E (X × Y)))
+  (SF-∘ (SF-T-δ A E X ⊗ SF-T-δ A E Y) (SF-∘ (ℙ A E _ _) (SF-T A E (ℙ A E X Y))))
+ℙ-moncom-mult𝕃< : (A E X Y : Set) → SF≤ (SF-∘ (𝕃 A E X Y) (SF-T-δ A E (X × Y)))
+  (SF-∘ (SF-T-δ A E X ⊗ SF-T-δ A E Y) (SF-∘ (ℙ A E _ _) (SF-T A E (ℙ A E X Y))))
+ℙ-moncom-multℝ< : (A E X Y : Set) → SF≤ (SF-∘ (ℝ A E X Y) (SF-T-δ A E (X × Y)))
+  (SF-∘ (SF-T-δ A E X ⊗ SF-T-δ A E Y) (SF-∘ (ℙ A E _ _) (SF-T A E (ℙ A E X Y))))
 
 ℙ-moncom-mult< A E X Y l-r (inj₁ i , j) = ℙ-moncom-mult𝕃< A E X Y l-r (i , j)
 ℙ-moncom-mult< A E X Y l-r (inj₂ i , j) = ℙ-moncom-multℝ< A E X Y l-r (i , j)
@@ -69,7 +69,7 @@ proj₂ (ℙ-moncom-unit A E X Y) (ret x , ret y) (i , j) = ((inj₁ tt) , tt) ,
   with ℙ-moncom-mult< A E X Y (l , r) (i , j)
 ... | ((u , v) , (w , p)) , eq = ((inj₂ u  , v) , inj₁ w , p) , cong (act a) eq
 ℙ-moncom-mult𝕃< A E X Y (err e , r) (i , inj₂ y) =
-  (((inj₂ tt) , PK-T-δ-Total A E Y r) , (inj₁ tt) , tt) , refl
+  (((inj₂ tt) , SF-T-δ-Total A E Y r) , (inj₁ tt) , tt) , refl
 ℙ-moncom-mult𝕃< A E X Y (ret x , ret y) (i , j) =
   ((tt , tt) , ((inj₁ tt) , (inj₁ tt))) , refl
 ℙ-moncom-mult𝕃< A E X Y (act a l , ret y) (i , inj₁ j) =
@@ -89,7 +89,7 @@ proj₂ (ℙ-moncom-unit A E X Y) (ret x , ret y) (i , j) = ((inj₁ tt) , tt) ,
   with ℙ-moncom-mult< A E X Y (l , r) (i , j)
 ... | ((u , v) , (w , p)) , eq = ((u , inj₂ v) , inj₂ w , p) , cong (act a) eq
 ℙ-moncom-multℝ< A E X Y (r , err e) (i , inj₂ y) =
-  ((PK-T-δ-Total A E X r , (inj₂ tt)) , (inj₂ tt) , tt) , refl
+  ((SF-T-δ-Total A E X r , (inj₂ tt)) , (inj₂ tt) , tt) , refl
 ℙ-moncom-multℝ< A E X Y (ret x , ret y) (i , j) =
   ((tt , tt) , ((inj₁ tt) , (inj₁ tt))) , refl
 ℙ-moncom-multℝ< A E X Y (ret y , act a l) (i , inj₁ j) =
@@ -107,14 +107,14 @@ proj₂ (ℙ-moncom-unit A E X Y) (ret x , ret y) (i , j) = ((inj₁ tt) , tt) ,
 
 
 ℙ-moncom-mult> : (A E X Y : Set)
-  → Pow-< (PK-∘ (PK-T-δ A E X ⊗ PK-T-δ A E Y) (PK-∘ (ℙ A E _ _) (PK-T A E (ℙ A E X Y))))
-          (PK-∘ (ℙ A E X Y) (PK-T-δ A E (X × Y)))
+  → SF≤ (SF-∘ (SF-T-δ A E X ⊗ SF-T-δ A E Y) (SF-∘ (ℙ A E _ _) (SF-T A E (ℙ A E X Y))))
+          (SF-∘ (ℙ A E X Y) (SF-T-δ A E (X × Y)))
 ℙ-moncom-mult𝕃> : (A E X Y : Set)
-  → Pow-< (PK-∘ (PK-T-δ A E X ⊗ PK-T-δ A E Y) (PK-∘ (𝕃 A E _ _) (PK-T A E (ℙ A E X Y))))
-          (PK-∘ (ℙ A E X Y) (PK-T-δ A E (X × Y)))
+  → SF≤ (SF-∘ (SF-T-δ A E X ⊗ SF-T-δ A E Y) (SF-∘ (𝕃 A E _ _) (SF-T A E (ℙ A E X Y))))
+          (SF-∘ (ℙ A E X Y) (SF-T-δ A E (X × Y)))
 ℙ-moncom-multℝ> : (A E X Y : Set)
-  → Pow-< (PK-∘ (PK-T-δ A E X ⊗ PK-T-δ A E Y) (PK-∘ (ℝ A E _ _) (PK-T A E (ℙ A E X Y))))
-          (PK-∘ (ℙ A E X Y) (PK-T-δ A E (X × Y)))
+  → SF≤ (SF-∘ (SF-T-δ A E X ⊗ SF-T-δ A E Y) (SF-∘ (ℝ A E _ _) (SF-T A E (ℙ A E X Y))))
+          (SF-∘ (ℙ A E X Y) (SF-T-δ A E (X × Y)))
 
 ℙ-moncom-mult> A E X Y l-r (i , inj₁ k , v) = ℙ-moncom-mult𝕃> A E X Y l-r (i , k , v)
 ℙ-moncom-mult> A E X Y l-r (i , inj₂ k , v) = ℙ-moncom-multℝ> A E X Y l-r (i , k , v)
@@ -182,32 +182,32 @@ proj₂ (ℙ-moncom-unit A E X Y) (ret x , ret y) (i , j) = ((inj₁ tt) , tt) ,
   ((inj₂ tt) , (inj₁ tt)) , refl
 
 
-ℙ-moncom-mult : (A E X Y : Set) → PK-≡ (PK-∘ (ℙ A E X Y) (PK-T-δ A E (X × Y)))
-  (PK-∘ (PK-T-δ A E X ⊗ PK-T-δ A E Y) (PK-∘ (ℙ A E _ _) (PK-T A E (ℙ A E X Y))))
+ℙ-moncom-mult : (A E X Y : Set) → SF≡ (SF-∘ (ℙ A E X Y) (SF-T-δ A E (X × Y)))
+  (SF-∘ (SF-T-δ A E X ⊗ SF-T-δ A E Y) (SF-∘ (ℙ A E _ _) (SF-T A E (ℙ A E X Y))))
 ℙ-moncom-mult A E X Y = (ℙ-moncom-mult< A E X Y) , (ℙ-moncom-mult> A E X Y)
 
 
 
 
 -- Interaction law equations
-IL-unit-𝕃 : (A E X Y : Set) → PK-≡ (PK-∘ (PK-T-η A E X ⊗ PK-Id _) (𝕃 A E X Y))
-                                   (PK-∘ (PK-Id _ ⊗ PK-T-ε A E Y) (PK-T-η A E _))
+IL-unit-𝕃 : (A E X Y : Set) → SF≡ (SF-∘ (SF-T-η A E X ⊗ SF-id _) (𝕃 A E X Y))
+                                   (SF-∘ (SF-id _ ⊗ SF-T-ε A E Y) (SF-T-η A E _))
 proj₁ (IL-unit-𝕃 A E X Y) (x , ret y) i = ((tt , tt) , tt) , refl
 proj₂ (IL-unit-𝕃 A E X Y) (x , ret y) i = ((tt , tt) , tt) , refl
 
 
-IL-mult-𝕃 : (A E X Y : Set) → PK-≡ (PK-∘ (PK-T-μ A E X ⊗ PK-Id _) (𝕃 A E X Y))
-  (PK-∘ (PK-Id _ ⊗ PK-T-δ A E Y) (PK-∘ (𝕃 A E _ _)
-        (PK-∘ (PK-T A E (𝕃 A E X Y)) (PK-T-μ A E _)))) 
-IL-mult-ℙ : (A E X Y : Set) → PK-≡ (PK-∘ (PK-T-μ A E X ⊗ PK-Id _) (ℙ A E X Y))
-  (PK-∘ (PK-Id _ ⊗ PK-T-δ A E Y) (PK-∘ (ℙ A E _ _)
-        (PK-∘ (PK-T A E (𝕃 A E X Y)) (PK-T-μ A E _)))) 
-IL-mult-ℝ< : (A E X Y : Set) → Pow-< (PK-∘ (PK-T-μ A E X ⊗ PK-Id _) (ℝ A E X Y))
-  (PK-∘ (PK-Id _ ⊗ PK-T-δ A E Y) (PK-∘ (ℙ A E _ _)
-        (PK-∘ (PK-T A E (𝕃 A E X Y)) (PK-T-μ A E _))))
-IL-mult-ℝ> : (A E X Y : Set) → Pow-< (PK-∘ (PK-Id _ ⊗ PK-T-δ A E Y) (PK-∘ (ℝ A E _ _)
-        (PK-∘ (PK-T A E (𝕃 A E X Y)) (PK-T-μ A E _))))
-        (PK-∘ (PK-T-μ A E X ⊗ PK-Id _) (ℙ A E X Y))
+IL-mult-𝕃 : (A E X Y : Set) → SF≡ (SF-∘ (SF-T-μ A E X ⊗ SF-id _) (𝕃 A E X Y))
+  (SF-∘ (SF-id _ ⊗ SF-T-δ A E Y) (SF-∘ (𝕃 A E _ _)
+        (SF-∘ (SF-T A E (𝕃 A E X Y)) (SF-T-μ A E _)))) 
+IL-mult-ℙ : (A E X Y : Set) → SF≡ (SF-∘ (SF-T-μ A E X ⊗ SF-id _) (ℙ A E X Y))
+  (SF-∘ (SF-id _ ⊗ SF-T-δ A E Y) (SF-∘ (ℙ A E _ _)
+        (SF-∘ (SF-T A E (𝕃 A E X Y)) (SF-T-μ A E _)))) 
+IL-mult-ℝ< : (A E X Y : Set) → SF≤ (SF-∘ (SF-T-μ A E X ⊗ SF-id _) (ℝ A E X Y))
+  (SF-∘ (SF-id _ ⊗ SF-T-δ A E Y) (SF-∘ (ℙ A E _ _)
+        (SF-∘ (SF-T A E (𝕃 A E X Y)) (SF-T-μ A E _))))
+IL-mult-ℝ> : (A E X Y : Set) → SF≤ (SF-∘ (SF-id _ ⊗ SF-T-δ A E Y) (SF-∘ (ℝ A E _ _)
+        (SF-∘ (SF-T A E (𝕃 A E X Y)) (SF-T-μ A E _))))
+        (SF-∘ (SF-T-μ A E X ⊗ SF-id _) (ℙ A E X Y))
 
 proj₁ (IL-mult-𝕃 A E X Y) (ret t , ret y) ((tt , tt) , i) =
   ((tt , tt) , (tt , (i , tt))) , refl
@@ -218,7 +218,7 @@ proj₁ (IL-mult-𝕃 A E X Y) (ret t , err e) ((tt , tt) , i) =
 proj₁ (IL-mult-𝕃 A E X Y) (act a d , r) ((tt , tt) , i)
   with proj₁ (IL-mult-ℙ A E X Y) (d , r) ((tt , tt) , i)
 ... | (u , v) , w = (u , v) , cong (act a) w
-proj₁ (IL-mult-𝕃 A E X Y) (err e , r) ((tt , tt) , i) = ((tt , (PK-T-δ-Total A E Y r)) ,
+proj₁ (IL-mult-𝕃 A E X Y) (err e , r) ((tt , tt) , i) = ((tt , (SF-T-δ-Total A E Y r)) ,
   (tt , (tt , tt))) , refl 
 proj₂ (IL-mult-𝕃 A E X Y) (ret t , ret y) (i , j , k , l) = ((tt , tt) , k) , refl
 proj₂ (IL-mult-𝕃 A E X Y) (ret t , act a r) ((tt , inj₁ tt) , j , k , l) =

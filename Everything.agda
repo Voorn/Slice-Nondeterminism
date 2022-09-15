@@ -2,29 +2,38 @@ module Everything where
 
 
 -- This repository contains the development of formalisations for the category of relations,
--- via "Index Nondeterminism", which shall be expanded upon in the future.
+-- via "Slice Nondeterminism", which shall be expanded upon in the future.
 
 -- It also contains the partial formalisation of results from the paper:
 -- "Nondeterministic Runners, A Model for Interleaving Algebraic Effects"
 -- currently submitted to ICTAC 2022.
 
 
+-- Slices
+open import Slice.Base
+open import Slice.Lattice
 
 
--- Main-line development of Index-Nondeterminism
 
--- The category of relations done directionally, the dagger operation and widesubcategories
-open import Index-Nondeterminism
+-- Slice Functions
+
+-- The category of relations done directionally
+open import Slice-Functions.Base
+
+-- The dagger operation
+open import Slice-Functions.Dagger
+
+-- Wide subcategories
+open import Slice-Functions.Subcategories
 
 -- The product in the category of relations, given by disjoint union
-open import Product
+open import Slice-Functions.Product
 
 -- Monoidal closed structure by lifting the Cartesian product from Set
-open import Monoidal
+open import Slice-Functions.Monoidal
 
 -- Additional structure on the monoidal product: copy, delete, etc.
-open import Structure
-
+open import Slice-Functions.Structure
 
 
 
@@ -41,18 +50,27 @@ open import Monads.Branch-Morphism
 
 
 
+-- Examples
+
+-- Iterative nondeterministic process
+open import Examples.Iterative
+
+-- Labelled transition system
+open import Examples.Transition
+
+
 
 -- Interleaving concurrency development
 
 -- The parallel operations on Traces from the aforementioned paper,
 -- its naturality, relation to strength, symmetry and associativity
-open import Interleaving.Parallel
+open import Parallel.Base
 
 -- Properties of the parallel operations regarding the monad and comonad structur on Traces
-open import Interleaving.Parallel-Monoidal
+open import Parallel.Monoidal
 
 -- The parallel runner
-open import Interleaving.Parallel-Runner
+open import Parallel.Runner
 
 
 

@@ -8,8 +8,12 @@ open import Data.Product renaming (map to map×)
 open import Relation.Binary.PropositionalEquality hiding ([_])
 
 
-open import Index-Nondeterminism
-open import Monoidal
+open import Slice.Base
+
+open import Slice-Functions.Base
+open import Slice-Functions.Subcategories
+open import Slice-Functions.Monoidal
+
 open import Monads.Free-Monad
 open import Monads.Trace
 
@@ -25,8 +29,8 @@ Sig-Act (S , ar) = Σ S λ σ → ar σ
 Trace-F : Sig → Set → Set
 Trace-F S X = Trace (Sig-Act S) (proj₁ S) X
 
-Free-Trace : (S : Sig) → (X : Set) → PK-Hom (Free S X) (Trace-F S X)
-Free-Trace (S , ar) X (leaf x) = PK-Id _ (ret x)
+Free-Trace : (S : Sig) → (X : Set) → SF (Free S X) (Trace-F S X)
+Free-Trace (S , ar) X (leaf x) = SF-id _ (ret x)
 proj₁ (Free-Trace (S , ar) X (node σ ts)) =
   (Σ (ar σ) λ i → proj₁ (Free-Trace (S , ar) X (ts i))) ⊎ ⊤
 proj₂ (Free-Trace (S , ar) X (node σ ts)) (inj₁ (i , c)) =
@@ -34,9 +38,9 @@ proj₂ (Free-Trace (S , ar) X (node σ ts)) (inj₁ (i , c)) =
 proj₂ (Free-Trace (S , ar) X (node σ ts)) (inj₂ tt) = err σ
 
 
-Free-Trace-nat< : (S : Sig) → {X Y : Set} → (f : PK-Hom X Y)
-  → Pow-< (PK-∘ (PK-F S f) (Free-Trace S Y))
-          (PK-∘ (Free-Trace S X) (PK-T _ _ f))
+Free-Trace-nat< : (S : Sig) → {X Y : Set} → (f : SF X Y)
+  → SF≤ (SF-∘ (SF-F S f) (Free-Trace S Y))
+          (SF-∘ (Free-Trace S X) (SF-T _ _ f))
 Free-Trace-nat< (S , ar) f (leaf x) (p , i) = (tt , p) , refl
 Free-Trace-nat< (S , ar) f (node σ ts) (p , inj₁ (i , c))
   with Free-Trace-nat< (S , ar) f (ts i) (p i , c)
@@ -77,7 +81,7 @@ Sig-decid (S , ar) = (σ : S) → decid (ar σ)
 
 
 Free-Trace-T-nat>-help' : (S : Sig) → {X Y : Set} → (Sd : Sig-decid S)
-  → (f : PK-Hom X Y) → (f-tot : PK-Total f)
+  → (f : SF X Y) → (f-tot : SF-Total f)
   → (σ : proj₁ S) → (ts : proj₂ S σ → Free S X)
   → (i : proj₂ S σ) → (u : Pos S X (λ x → proj₁ (f x)) (ts i))
   → (proj₁ (Free-Trace S Y (proj₂ (Free-P S (ts i) f) u)))
@@ -90,9 +94,9 @@ Free-Trace-T-nat>-help' S Sd f f-tot σ ts i u v with Sd σ i i
 
 -- Totality necessary to find position in case of nullary operation
 Free-Trace-T-nat> : (S : Sig) → {X Y : Set} → (Sig-decid S)
-  → (f : PK-Hom X Y) → (PK-Total f)
-  → Pow-< (PK-∘ (Free-Trace S X) (PK-T _ _ f))
-          (PK-∘ (PK-F S f) (Free-Trace S Y))
+  → (f : SF X Y) → (SF-Total f)
+  → SF≤ (SF-∘ (Free-Trace S X) (SF-T _ _ f))
+          (SF-∘ (SF-F S f) (Free-Trace S Y))
 Free-Trace-T-nat> S Sd f f-tot (leaf x) (tt , j) = (j , tt) , refl
 proj₁ (Free-Trace-T-nat> S Sd f f-tot (node σ ts) (inj₁ (i , c) , j))
   with Free-Trace-T-nat> S Sd f f-tot (ts i) (c , j)
@@ -106,21 +110,21 @@ Free-Trace-T-nat> S Sd f f-tot (node σ ts) (inj₂ tt , tt) =
   ((λ i → Pos-In S _ (λ x → proj₁ (f x)) (ts i) f-tot) , (inj₂ tt)) , refl
           
 Free-Trace-T-nat : (S : Sig) → {X Y : Set} → (Sig-decid S)
-  → (f : PK-Hom X Y) → (PK-Total f)
-  → PK-≡ (PK-∘ (PK-F S f) (Free-Trace S Y))
-         (PK-∘ (Free-Trace S X) (PK-T _ _ f))
+  → (f : SF X Y) → (SF-Total f)
+  → SF≡ (SF-∘ (SF-F S f) (Free-Trace S Y))
+         (SF-∘ (Free-Trace S X) (SF-T _ _ f))
 Free-Trace-T-nat S Sd f f-tot = Free-Trace-nat< S f , Free-Trace-T-nat> S Sd f f-tot
 
 
 
 
-Free-Trace-η : (S : Sig) → (X : Set) → PK-≡ (PK-∘ (PK-F-η S X) (Free-Trace S X))
-                                            (PK-T-η _ _ X)
+Free-Trace-η : (S : Sig) → (X : Set) → SF≡ (SF-∘ (SF-F-η S X) (Free-Trace S X))
+                                            (SF-T-η _ _ X)
 proj₁ (Free-Trace-η S X) x (tt , tt) = tt , refl
 proj₂ (Free-Trace-η S X) x tt = (tt , tt) , refl
 
-Free-Trace-μ : (S : Sig) → (X : Set) → PK-≡ (PK-∘ (PK-F-μ S X) (Free-Trace S X))
-  (PK-∘ (Free-Trace S (Free S X)) (PK-∘ (PK-T _ _ (Free-Trace S X)) (PK-T-μ _ _ X)))
+Free-Trace-μ : (S : Sig) → (X : Set) → SF≡ (SF-∘ (SF-F-μ S X) (Free-Trace S X))
+  (SF-∘ (Free-Trace S (Free S X)) (SF-∘ (SF-T _ _ (Free-Trace S X)) (SF-T-μ _ _ X)))
 proj₁ (Free-Trace-μ S X) (leaf t) (tt , i) = (tt , (i , tt)) , refl
 proj₁ (Free-Trace-μ S X) (node σ ts) (tt , inj₁ (i , p))
   with proj₁ (Free-Trace-μ S X) (ts i) (tt , p)
