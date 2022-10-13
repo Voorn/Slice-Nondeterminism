@@ -78,7 +78,6 @@ _PA≡_ {A} a b = SL-sim (Lis A) (PA-eval a) (PA-eval b)
 
 
 
-
 -- Congruences
 Cong-at : {A : Set} → (a : A) → ((at a) PA≡ (at a))
 Cong-at a = (λ i → tt , refl) , (λ i → tt , refl)
@@ -176,10 +175,24 @@ Lis-ℙ p (act a uni) (act b r) = SL-η (Lis _) (act (p a b) r)
 Lis-ℙ p (act a (act a₁ l)) (act b uni) = SL-η (Lis _) (act (p a b) (act a₁ l))
 Lis-ℙ p (act a (act a₁ l)) (act b (act b₁ r)) = SL-fun (act (p a b)) (Lis-𝕀 l r)
 
-ACP-eval : {A : Set} → SF (ACP A) (Lis A)
-ACP-eval (at a) = {!!}
-ACP-eval (P ⊕ P₁) = {!!}
-ACP-eval (P · P₁) = {!!}
-ACP-eval (P 𝕀 P₁) = {!!}
-ACP-eval (P 𝕃 P₁) = {!!}
-ACP-eval (P ℙ P₁) = {!!}
+Lis-ℙ𝕀 : {A : Set} → (A → A → A) → Lis A → Lis A → SL (Lis A)
+Lis-ℙ𝕃 : {A : Set} → (A → A → A) → Lis A → Lis A → SL (Lis A)
+Lis-ℙ𝕀 m p q = join (Lis-ℙ m p q) (join (Lis-ℙ𝕃 m p q) (Lis-ℙ𝕃 m q p))
+Lis-ℙ𝕃 m uni q = SL-η _ q
+Lis-ℙ𝕃 m (act a p) q = SL-fun (act a) (Lis-ℙ𝕀 m p q)
+
+Lis-ℙ𝕀* : {A : Set} → (A → A → A) → SL (Lis A) → SL (Lis A) → SL (Lis A)
+Lis-ℙ𝕃* : {A : Set} → (A → A → A) → SL (Lis A) → SL (Lis A) → SL (Lis A)
+Lis-ℙ* : {A : Set} → (A → A → A) → SL (Lis A) → SL (Lis A) → SL (Lis A)
+Lis-ℙ𝕀* m = SL-2* (Lis-ℙ𝕀 m)
+Lis-ℙ𝕃* m = SL-2* (Lis-ℙ𝕃 m)
+Lis-ℙ* m = SL-2* (Lis-ℙ m)
+
+
+ACP-eval : {A : Set} → (A → A → A) → SF (ACP A) (Lis A)
+ACP-eval m (at a) = SL-η _ (act a uni)
+ACP-eval m (P ⊕ P₁) = join (ACP-eval m P) (ACP-eval m P₁)
+ACP-eval m (P · P₁) = append* (ACP-eval m P) (ACP-eval m P₁)
+ACP-eval m (P 𝕀 P₁) = Lis-ℙ𝕀* m (ACP-eval m P) (ACP-eval m P₁)
+ACP-eval m (P 𝕃 P₁) = Lis-ℙ𝕃* m (ACP-eval m P) (ACP-eval m P₁)
+ACP-eval m (P ℙ P₁) = Lis-ℙ* m (ACP-eval m P) (ACP-eval m P₁)

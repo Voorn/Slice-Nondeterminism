@@ -10,7 +10,11 @@ module Everything where
 
 
 -- Slices
+
+-- Base definition of the category of slices
 open import Slice.Base
+
+-- Lattice structure with respect to order induced by morphism existence
 open import Slice.Lattice
 
 
@@ -35,6 +39,18 @@ open import Slice-Functions.Monoidal
 -- Additional structure on the monoidal product: copy, delete, etc.
 open import Slice-Functions.Structure
 
+
+
+-- Other representations of the category of relations
+
+-- The category of spans
+open import Relations.Span
+
+-- The category of extensional relations
+open import Relations.Ext-Rel
+
+-- Equivalences of categories
+open import Relations.Cat-Equivalences
 
 
 -- Free monads from Set lifted to the category of relations

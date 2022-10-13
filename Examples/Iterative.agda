@@ -9,7 +9,7 @@ open import Relation.Binary.PropositionalEquality hiding ([_])
 
 
 open import Slice.Base
-
+open import Slice.Lattice
 
 
 data Tower (X : Set) : Set₁ where
@@ -58,7 +58,10 @@ proj₂ (COA-Slice-suc c s (suc n) (i , p)) with (c s)
 ... | inj₁ z = proj₂ (COA-Slice-suc c z n p)
 ... | inj₂ x = refl
 
-
+-- More direct construction
+COA-iter : {S X : Set} → (a : COA S X) → S → ℕ → SL X
+COA-iter a s zero = SL-⊥ _
+COA-iter a s (suc n) = SL-* (λ {(inj₁ z) → COA-iter a z n ; (inj₂ x) → SL-η _ x}) (a s)
 
 -- ℕmax calculus
 ℕ+ : ℕ → ℕ → ℕ

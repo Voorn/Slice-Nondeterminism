@@ -11,14 +11,14 @@ open import Data.Bool
 open import Slice.Base
 
 
--- Lists
-data Lis (X : Set) : Set where
-  uni : Lis X
-  act : X → Lis X → Lis X
+-- Lists of labels
+data Lis (A : Set) : Set where
+  uni : Lis A
+  act : A → Lis A → Lis A
 
-append : {X : Set} → Lis X → Lis X → Lis X
-append uni b = b
-append (act x a) b = act x (append a b)
+append : {A : Set} → Lis A → Lis A → Lis A
+append uni l = l
+append (act a l) r = act a (append l r)
 
 
 Lis-luni : {X : Set} → (a : Lis X) → (append uni a ≡ a)
@@ -36,15 +36,13 @@ Lis-asso (act x a) b c = cong (act x) (Lis-asso a b c)
 
 -- Labelled transition system
 LTS : (A : Set) → Set₁
-LTS A = Σ Set λ I → Σ Set λ S → (S × A → SL S) × (S → Bool)
+LTS A = Σ Set λ I → Σ Set λ S → (S × A → SL S) × (S → Set)
 
 LTS-State : (A : Set) → LTS A → Set
 LTS-State A (I , S , rest) = S
 
 LTS-Path : (A : Set) → (l : LTS A) → (LTS-State A l) → ℕ → Set
-LTS-Path A (I , S , step , end) s zero with (end s)
-... | true = ⊤
-... | false = ⊥
+LTS-Path A (I , S , step , end) s zero = end s
 LTS-Path A (I , S , step , end) s (suc n) = Σ A λ a → Σ (proj₁ (step (s , a)))
   λ i → LTS-Path A (I , S , step , end) (proj₂ (step (s , a)) i) n
 
@@ -52,8 +50,7 @@ LTS-Path A (I , S , step , end) s (suc n) = Σ A λ a → Σ (proj₁ (step (s ,
 -- Collecting all accepting lists
 LTS-Col : (A : Set) → (l : LTS A) → (s : LTS-State A l) → SL (Lis A)
 proj₁ (LTS-Col A l s) = Σ ℕ λ n → LTS-Path A l s n
-proj₂ (LTS-Col A (I , S , ste , end) s) (zero , p) with (end s)
-... | true = uni
+proj₂ (LTS-Col A (I , S , ste , end) s) (zero , p) = uni
 proj₂ (LTS-Col A (I , S , ste , end) s) (suc n , a , (i , p)) =
   act a (proj₂ (LTS-Col A (I , S , ste , end) (proj₂ (ste (s , a)) i)) (n , p))
 
@@ -61,7 +58,7 @@ proj₂ (LTS-Col A (I , S , ste , end) s) (suc n , a , (i , p)) =
 -- Check if list is accepting
 
 LTS-accept : (A : Set) → (l : LTS A) → (s : LTS-State A l) → Lis A → Set
-LTS-accept A (I , S , ste , end) s uni = end s ≡ true
+LTS-accept A (I , S , ste , end) s uni = end s
 LTS-accept A (I , S , ste , end) s (act a p) = Σ (proj₁ (ste (s , a))) λ z
   → LTS-accept A (I , S , ste , end) (proj₂ (ste (s , a)) z) p
 
@@ -71,9 +68,9 @@ LTS-sound : (A : Set) → (l : LTS A) → (s : LTS-State A l) → (p : Lis A)
   → LTS-accept A l s p → SL-∈ (Lis A) p (LTS-Col A l s)
 proj₁ (proj₁ (LTS-sound A l s uni accep)) = 0
 proj₂ (proj₁ (LTS-sound A (I , S , ste , end) s uni accep)) with end s
-... | true = tt
+... | i = accep
 proj₂ (LTS-sound A (I , S , ste , end) s uni accep)  with end s
-... | true = refl
+... | i = refl
 LTS-sound A (I , S , ste , end) s (act a p) (i , accep)
   with LTS-sound A (I , S , ste , end) (proj₂ (ste (s , a)) i) p accep
 ... | ((n , v) , eq) = ((suc n) , (a , i , v)) , (cong (act a) eq)
@@ -82,10 +79,9 @@ LTS-sound A (I , S , ste , end) s (act a p) (i , accep)
 LTS-adeq : (A : Set) → (l : LTS A) → (s : LTS-State A l) → (p : Lis A)
   → SL-∈ (Lis A) p (LTS-Col A l s) → LTS-accept A l s p
 LTS-adeq A (I , S , ste , end) s uni ((zero , v) , eq) with end s
-... | true = refl
+... | k = v
 LTS-adeq A (I , S , ste , end) s (act a p) ((zero , v) , eq) with end s
-LTS-adeq A l s (act a p) ((zero , ()) , eq) | false
-LTS-adeq A l s (act a p) ((zero , v) , ()) | true
+LTS-adeq A (I , S , ste , end) s (act a p) ((zero , v) , ()) | k
 LTS-adeq A (I , S , ste , end) s
   (act a .(proj₂ (LTS-Col A (I , S , ste , end) (proj₂ (ste (s , a)) i)) (n , v)))
   ((suc n , .a , i , v) , refl) = i ,

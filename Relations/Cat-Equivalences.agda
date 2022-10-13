@@ -19,7 +19,7 @@ open import Relations.Ext-Rel
 -- Bicategories of spans and directional spans are equivalent
 
 
--- Functor from directional spans to spans
+-- Functor from slice functions to spans
 SF→Span : {X Y : Set} → SF X Y → Span X Y
 SF→Span {X} {Y} f = (Σ X λ x → proj₁ (f x)) , λ {(x , i) → x , (proj₂ (f x) i)}
 
@@ -37,7 +37,7 @@ SF→Span-≤ : {X Y : Set} → {f g : SF X Y} → SF≤ f g → Span≤ (SF→S
 SF→Span-≤ f<g (x , i) = (x , (proj₁ (f<g x i))) , (cong (λ u → (x , u)) (proj₂ (f<g x i)))
 
 
--- Functor from spans to directional spans
+-- Functor from spans to slice functions
 Span→SF : {X Y : Set} → Span X Y → SF X Y
 Span→SF (I , a) x = (Σ I λ i → proj₁ (a i) ≡ x) , λ i → proj₂ (a (proj₁ i))
 
@@ -74,7 +74,7 @@ proj₂ (SF→Span→SF f) x i = ((x , i) , refl) , refl
 -- Bicategories of extensional relations and directional spans are equivalent
 
 
--- Functor from directional spans to extensional relations
+-- Functor from slice functions to extensional relations
 SF→ER : {X Y : Set} → SF X Y → ER X Y
 SF→ER f x y = Σ (proj₁ (f x)) λ i → proj₂ (f x) i ≡ y
 
@@ -94,7 +94,7 @@ SF→ER-≤ : {X Y : Set} → {f g : SF X Y} → SF≤ f g → ER≤ (SF→ER f)
 SF→ER-≤ {X} {Y} {f} f≤g x .(proj₂ (f x) i) (i , refl) = (proj₁ (f≤g x i)) , sym (proj₂ (f≤g x i))
 
 
--- Functor from extensional relations to directional spans
+-- Functor from extensional relations to slice functions
 ER→SF : {X Y : Set} → ER X Y → SF X Y
 ER→SF R x = (Σ _ λ y → R x y) , proj₁
 

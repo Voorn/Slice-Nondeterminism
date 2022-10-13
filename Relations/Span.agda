@@ -28,7 +28,7 @@ Span-∘ : {X Y Z : Set} → Span X Y → Span Y Z → Span X Z
 Span-∘ (I , A) (J , B) = (Σ (I × J) λ {(i , j) → proj₂ (A i) ≡ proj₁ (B j)}) ,
   λ {((i , j) , eq) → proj₁ (A i) , proj₂ (B j)}
 
--- Order on morphisms (2-morphisms if truncated)
+-- Pre-Order on morphisms 
 Span≤ : {X Y : Set} → (S S' : Span X Y) → Set
 Span≤  {X} {Y} = SL→ (X × Y)
 

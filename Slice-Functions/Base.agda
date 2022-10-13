@@ -15,7 +15,7 @@ open import Slice.Base
 -- Objects are sets
 
 
--- Morphisms (Directional spans)
+-- Morphisms (Slice Functions)
 SF : (X Y : Set) → Set₁
 SF X Y = X → SL Y
 
@@ -27,7 +27,7 @@ SF-id = SL-η
 SF-∘ : {X Y Z : Set} → SF X Y → SF Y Z → SF X Z
 SF-∘ f g x = SL-* g (f x)
 
--- Order on morphisms (2-morphisms if truncated)
+-- Pre-Order on morphisms
 SF≤ : {X Y : Set} → SF X Y → SF X Y → Set
 SF≤ {X} {Y} f g = (x : X) → SL→ Y (f x) (g x) 
 

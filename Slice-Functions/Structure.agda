@@ -42,6 +42,10 @@ SF-Surje-η-nat : {X Y : Set} → (f : SF X Y)
   → SF-Surje f → SF≡ (SF-η Y) (SF-∘ (SF-η X) f)
 SF-Surje-η-nat f fsur = (SF-Surje-η-nat< f fsur) , (SF-η-nat> f)
 
+SF-η-nat⇒Surje : {X Y : Set} → (f : SF X Y)
+  → SF≡ (SF-η Y) (SF-∘ (SF-η X) f) → SF-Surje f
+SF-η-nat⇒Surje f (i , j) y with i tt y
+... | (x , u) , refl = x , (u , refl)
 
 
 -- Comparitor, a.k.a. multiplication
@@ -69,6 +73,9 @@ SF-Injec-μ-nat : {X Y : Set} → (f : SF X Y)
   → SF-Injec f → (SF≡ (SF-∘ (f ⊗ f) (SF-μ Y)) (SF-∘ (SF-μ X) f))
 SF-Injec-μ-nat f finje = (SF-Injec-μ-nat< f finje) , (SF-μ-nat> f)
 
+SF-μ-nat⇒Injec : {X Y : Set} → (f : SF X Y)
+  → (SF≡ (SF-∘ (f ⊗ f) (SF-μ Y)) (SF-∘ (SF-μ X) f)) → SF-Injec f
+SF-μ-nat⇒Injec f (a , b) x y i j eq = proj₁ (proj₁ (a (x , y) ((i , j) , eq)))
 
 
 -- Delete, or the co-unit operation for ×
@@ -102,7 +109,9 @@ SF-Total-ε-nat : {X Y : Set} → (f : SF X Y)
   → SF-Total f → SF≡ (SF-∘ f (SF-ε Y)) (SF-ε X)
 SF-Total-ε-nat f ftot = (SF-ε-nat< f) , (SF-Total-ε-nat> f ftot)
 
-
+SF-ε-nat⇒Total : {X Y : Set} → (f : SF X Y)
+  → SF≡ (SF-∘ f (SF-ε Y)) (SF-ε X) → SF-Total f
+SF-ε-nat⇒Total f (i , j) x = proj₁ (proj₁ (j x tt))
 
 
 
@@ -140,8 +149,10 @@ SF-Onele-δ-nat : {X Y : Set} → (f : SF X Y)
   → SF-Onele f → SF≡ (SF-∘ f (SF-δ Y)) (SF-∘ (SF-δ X) (f ⊗ f))
 SF-Onele-δ-nat f fone =  (SF-δ-nat< f) , (SF-Onele-δ-nat> f fone)
 
-
-
+SF-δ-nat⇒Onele : {X Y : Set} → (f : SF X Y)
+  → SF≡ (SF-∘ f (SF-δ Y)) (SF-∘ (SF-δ X) (f ⊗ f)) → SF-Onele f
+SF-δ-nat⇒Onele f (a , b) x i j with b x (tt , i , j)
+...| ((u , tt) , eq) = trans (cong proj₁ eq) (sym (cong proj₂ eq))
 
 
 -- Equations

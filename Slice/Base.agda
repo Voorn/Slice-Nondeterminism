@@ -16,17 +16,24 @@ SL X = Σ Set λ I → I → X
 SL→ : (X : Set) → (IA JB : SL X) → Set
 SL→ X (I , A) (J , B) = (i : I) → Σ J λ j → A i ≡ B j
 
+
+-- The index map of the slice morphism
 SL→ex : {X : Set} → {IA JB : SL X} → SL→ X IA JB → (proj₁ IA → proj₁ JB)
 SL→ex f i = proj₁ (f i)
 
+-- The triangle equality of the slice morphism
 SL→≡ : (X : Set) → (IA JB : SL X) → (SL→ X IA JB) → (SL→ X IA JB) → Set
 SL→≡ X (I , A) (J , B) f g = (i : I) → proj₁ (f i) ≡ proj₁ (g i)
 
 
+
 -- Categorical structure
+
+-- Identity morphism
 SL→id : (X : Set) → (IA : SL X) → SL→ X IA IA
 SL→id X (I , A) i = i , refl
 
+-- Morphism composition
 SL→∘ : (X : Set) → {IA JB KC : SL X} → SL→ X IA JB → SL→ X JB KC → SL→ X IA KC
 SL→∘ X f g i =  proj₁ (g (proj₁ (f i))) ,
   trans (proj₂ (f i)) (proj₂ (g (proj₁ (f i))))
@@ -148,6 +155,7 @@ SL→⊂ X (I , A) (J , B) f x (i , eq) = proj₁ (f i) , trans (sym (proj₂ (f
 SL⊂→ : (X : Set) → (IA JB : SL X) → SL-⊂ X IA JB → (SL→ X IA JB)
 SL⊂→ X (I , A) (J , B) u i = (proj₁ (u (A i) (i , refl))) ,
   sym (proj₂ (u (A i) (i , refl)))
+
 
 
 

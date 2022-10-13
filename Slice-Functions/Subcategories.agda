@@ -83,6 +83,19 @@ SF-dag-Lone f of x y (x₀ , i , eq₀) (.x₀ , j , eq₁) refl =
 SF-dag-Injec : {X Y : Set} → (f : SF X Y) → SF-Injec f → SF-Onele (SF-dag f)
 SF-dag-Injec f if y (x , i , eq) (x' , j , eq') = if x x' i j (trans eq (sym eq'))
 
+-- Inverse existence
+SF-postinverse : {X Y : Set} → (f : SF X Y) → (SF-Total f) → (SF-Injec f)
+  → SF≡ (SF-∘ f (SF-dag f)) (SF-id X)
+proj₁ (SF-postinverse f f-tot f-injec) x (i , x' , j , eq) = tt ,
+  (sym (f-injec x x' i j (sym eq)))
+proj₂ (SF-postinverse f f-tot f-injec) x tt = ((f-tot x) , (x , ((f-tot x) , refl))) , refl
+
+
+SF-preinverse : {X Y : Set} → (f : SF X Y) → (SF-Onele f) → (SF-Surje f)
+  → SF≡ (SF-∘ (SF-dag f) f) (SF-id Y) 
+proj₁ (SF-preinverse f fone fsur) y ((x , i , eq) , j) = tt , trans (sym (fone x i j)) eq
+proj₂ (SF-preinverse f fone fsur) y tt with fsur y
+... | x , i , refl = ((x , (i , refl)) , i) , refl
 
 
 -- Set is the subcategory of Onele and Total relations
