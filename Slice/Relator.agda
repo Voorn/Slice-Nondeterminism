@@ -108,12 +108,26 @@ proj₁ (DR-κ R S a b a<b f g f<g) (j , i) = (proj₁ a<b j) ,
 proj₂ (DR-κ R S a b a<b f g f<g) (j , i) = proj₂ (f<g (proj₂ a (proj₁ a<b j)) (proj₂ b j) (proj₂ a<b j)) i
 
 
-
+-- Convex nondeterminism relator
 Con-Relat : SL-relat
 Con-Relat R a b = Ang-Relat R a b × Dem-Relat R a b
 
+
+CR-id : SL-relat-id (Con-Relat)
+CR-id a = (AR-id a) , (DR-id a)
+
+CR-comp : SL-relat-comp (Con-Relat)
+CR-comp R S a b c (aARb , aDRb) (bASc , bDSc) =
+  (AR-comp R S a b c aARb bASc) , (DR-comp R S a b c aDRb bDSc)
+
+CR-⊂ : SL-relat-⊂ (Con-Relat)
+CR-⊂ R S R<S a b (aARb , aDRb) = (AR-⊂ R S R<S a b aARb) , DR-⊂ R S R<S a b aDRb
+
 CR-nat : SL-relat-nat (Con-Relat)
 CR-nat R f g a b = refl
+
+CR-η : SL-relat-η (Con-Relat)
+CR-η R x y xRy = (AR-η R x y xRy) , (DR-η R x y xRy)
 
 CR-κ : SL-relat-κ (Con-Relat)
 CR-κ R S a b (a-A-b , a-D-b) f g f<g =

@@ -11,20 +11,29 @@ open import Slice.Base
 
 
 -- Structure of powerdomain
+
+-- top element
 SL-⊤ : (X : Set) → SL X
 SL-⊤ X = X , (λ x → x)
 
 SL-⊤-top : {X : Set} → (U : SL X) → SL→ X U (SL-⊤ X)
 SL-⊤-top (I , f) i = (f i) , refl
 
+SL-⊤-∈ : {X : Set} → (x : X) → SL-∈ X x (SL-⊤ X)
+SL-⊤-∈ x = x , refl
 
+-- bottom element
 SL-⊥ : (X : Set) → SL X
 SL-⊥ X = ⊥ , (λ {()})
 
 SL-⊥-bot : {X : Set} → (U : SL X) → SL→ X (SL-⊥ X) U
 SL-⊥-bot (I , f) ()
 
+SL-⊥-∈ : {X : Set} → (x : X) → SL-∈ X x (SL-⊥ X) → ⊥
+SL-⊥-∈ x x∈∅ = proj₁ x∈∅
 
+
+-- join operation
 join : {X : Set} → SL X → SL X → SL X
 join (I , l) (J , r) = (I ⊎ J) , (λ { (inj₁ i) → l i ; (inj₂ j) → r j})
 
@@ -52,6 +61,20 @@ proj₂ (join-asso a b c) (inj₁ i) = (inj₁ (inj₁ i)) , refl
 proj₂ (join-asso a b c) (inj₂ (inj₁ j)) = inj₁ (inj₂ j) , refl
 proj₂ (join-asso a b c) (inj₂ (inj₂ k)) = inj₂ k , refl
 
+
+-- join corresponds to union when considered externally
+join-∈-unfold : {X : Set} → (a b : SL X) → (x : X)
+  → SL-∈ X x (join a b) → SL-∈ X x a ⊎ SL-∈ X x b
+join-∈-unfold a b x (inj₁ i , eq) = inj₁ (i , eq)
+join-∈-unfold a b x (inj₂ j , eq) = inj₂ (j , eq)
+
+join-∈-wrap : {X : Set} → (a b : SL X) → (x : X)
+  → SL-∈ X x a ⊎ SL-∈ X x b → SL-∈ X x (join a b)
+join-∈-wrap a b x (inj₁ (i , eq)) = inj₁ i , eq
+join-∈-wrap a b x (inj₂ (j , eq)) = inj₂ j , eq
+
+
+-- The meet operation (need equivalence inside indexing set)
 meet : {X : Set} → SL X → SL X → SL X
 meet (I , l) (J , r) = Σ (I × J) (λ {(i , j) → l i ≡ r j}) ,
   λ {((i , j) , eq) → l i} 
@@ -75,6 +98,16 @@ proj₁ (meet-asso a b c) ((((i , j) , eq) , k) , eq') =
   ((i , (j , k) , trans (sym eq) eq') , eq) , refl
 proj₂ (meet-asso a b c) ((i , (j , k) , eq) , eq') =
   ((((i , j) , eq') , k) , (trans eq' eq)) , refl
+
+-- meet corresponds to intersection when considered externally
+meet-∈-unfold : {X : Set} → (a b : SL X) → (x : X)
+  → SL-∈ X x (meet a b) → SL-∈ X x a × SL-∈ X x b
+meet-∈-unfold a b .(proj₂ a i) (((i , j) , eq) , refl) = (i , refl) , (j , sym eq)
+
+meet-∈-wrap : {X : Set} → (a b : SL X) → (x : X)
+  → SL-∈ X x a × SL-∈ X x b → SL-∈ X x (meet a b)
+meet-∈-wrap a b .(proj₂ a i) ((i , refl) , j , eq) = ((i , j) , (sym eq)) , refl
+
 
 -- Absorption laws
 SL-lat1 : {X : Set} → (a b : SL X) → SL-sim X (join a (meet a b)) a
@@ -109,6 +142,17 @@ proj₂ (SL-⋁-union f g) (inj₁ (u , i)) = (inj₁ u , i) , refl
 proj₂ (SL-⋁-union f g) (inj₂ (v , j)) = (inj₂ v , j) , refl
 
 
+-- ⋁ corresponds to union externally
+SL-⋁-∈-unfold : {X U V : Set} → (f : U → SL X) → (x : X)
+  → SL-∈ X x (SL-⋁ f) → (Σ U λ u → SL-∈ X x (f u))
+SL-⋁-∈-unfold f x ((u , i) , eq) = u , i , eq
+
+SL-⋁-∈-wrap : {X U V : Set} → (f : U → SL X) → (x : X)
+  → (Σ U λ u → SL-∈ X x (f u)) → SL-∈ X x (SL-⋁ f)
+SL-⋁-∈-wrap f x (u , i , eq) = (u , i) , eq
+
+
+
 -- arbitrary meet
 SL-⋀ : {X U : Set} → (U → SL X) → SL X
 SL-⋀ {X} {U} f = (Σ X λ x → (u : U) → Σ (proj₁ (f u)) λ i → proj₂ (f u) i ≡ x) ,
@@ -123,6 +167,18 @@ proj₂ (SL-⋀-union f g) (((x , H) , .x , K) , refl) =
   (x , (λ { (inj₁ u) → H u ; (inj₂ v) → K v})) , refl
 
 
+-- ⋀ corresponds to intersection externally
+SL-⋀-∈-unfold : {X U V : Set} → (f : U → SL X) → (x : X)
+  → SL-∈ X x (SL-⋀ f) → ((u : U) → SL-∈ X x (f u))
+SL-⋀-∈-unfold f x ((.x , H) , refl) = H
+
+
+SL-⋀-∈-wrap : {X U V : Set} → (f : U → SL X) → (x : X)
+  → ((u : U) → SL-∈ X x (f u)) → SL-∈ X x (SL-⋀ f)
+SL-⋀-∈-wrap f x H = (x , H) , refl
+
+
+-- One distributive law holds
 SL-dist : {X U : Set} → {V : U → Set} → (F : (u : U) → (v : V u) → SL X)
   → SL-sim X (SL-⋀ (λ u → SL-⋁ (F u)))
              (SL-⋁ {X} {(u : U) → V u} λ h → SL-⋀ {X} {U} λ u → F u (h u))

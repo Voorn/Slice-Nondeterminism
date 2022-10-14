@@ -55,9 +55,7 @@ proj₂ (⊕-∘ f g f' g') (inj₂ y) ij = ij , refl
 
 
 
-
-
--- ⊕ is the product of the category
+-- product structure of ⊎
 ⊕-proj₁ : (X Y : Set) → SF (X ⊎ Y) X
 ⊕-proj₁ X Y (inj₁ x) = SF-id _ x
 ⊕-proj₁ X Y (inj₂ y) = ⊥ , (λ {()})
@@ -82,6 +80,7 @@ proj₂ (⊕-proj₂-nat f g) (inj₂ x) (i , tt) = (tt , i) , refl
 ⊎-deceq (inj₂ y) = inj₂ (y , refl)
 
 
+-- We start working towards explicitly showing that ⊎ is the categorical product
 ⊕-sew : {X Y Z : Set} → SF X Y → SF X Z → SF X (Y ⊎ Z)
 ⊕-sew f g x = (proj₁ (f x) ⊎ proj₁ (g x)) ,
   (λ { (inj₁ i) → inj₁ (proj₂ (f x) i) ; (inj₂ j) → inj₂ (proj₂ (g x) j)})
@@ -146,6 +145,7 @@ proj₂ (proj₂ (⊕-sew-p f) x i) | inj₂ (z , eq) with proj₂ (f x) i
   ⊕-sew-< f' f g' g (proj₂ f≡f') (proj₂ g≡g')
 
 
+-- ⊎ is the categorical product
 ⊕-product : (X Y Z : Set) → (f : SF Z X) → (g : SF Z Y)
   → Σ (SF Z (X ⊎ Y)) λ u →
       (SF≡ (SF-∘ u (⊕-proj₁ _ _)) f × SF≡ (SF-∘ u (⊕-proj₂ _ _)) g)
@@ -156,10 +156,14 @@ proj₁ (⊕-product X Y Z f g) = ⊕-sew f g
 proj₁ (proj₂ (⊕-product X Y Z f g)) = (⊕-sew-l f g) , (⊕-sew-r f g)
 proj₂ (proj₂ (⊕-product X Y Z f g)) w (eq₁ , eq₂) =
   SF≡-Tran _ _ _
-    (⊕-sew-≡ f (SF-∘ w (⊕-proj₁ X Y)) g (SF-∘ w (⊕-proj₂ X Y)) (SF≡-Symm _ _ eq₁) (SF≡-Symm _ _ eq₂))
+    (⊕-sew-≡ f (SF-∘ w (⊕-proj₁ X Y)) g (SF-∘ w (⊕-proj₂ X Y)) (SF≡-Symm _ _ eq₁)
+             (SF≡-Symm _ _ eq₂))
     (⊕-sew-p w)
 
--- coproduct
+
+
+
+-- Coproduct structure of ⊎
 ⊕-inj₁ : (X Y : Set) → SF X (X ⊎ Y)
 ⊕-inj₁ X Y x = SF-id _ (inj₁ x)
 
@@ -167,7 +171,7 @@ proj₂ (proj₂ (⊕-product X Y Z f g)) w (eq₁ , eq₂) =
 ⊕-inj₂ X Y y = SF-id _ (inj₂ y)
 
 
-
+-- Working towards a proof that ⊎ is the categorical coproduct
 open import Slice-Functions.Dagger
 ⊕-inj₁-dag : (X Y : Set) → SF≡ (SF-dag (⊕-inj₁ X Y)) (⊕-proj₁ X Y)
 proj₁ (⊕-inj₁-dag X Y) (inj₁ x) (.x , tt , refl) = tt , refl
@@ -192,6 +196,7 @@ proj₂ (⊕-inj₂-proj₂ X Y) y i = (tt , tt) , refl
 ⊕-cosew f g (inj₂ y) = g y
 
 
+-- ⊎ is the Categorical coproduct
 ⊕-coproduct : {X Y Z : Set} → (f : SF X Z) → (g : SF Y Z)
   → Σ (SF (X ⊎ Y) Z) λ u →
       (SF≡ (SF-∘ (⊕-inj₁ _ _) u) f × SF≡ (SF-∘ (⊕-inj₂ _ _) u) g)
