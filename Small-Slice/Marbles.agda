@@ -53,6 +53,7 @@ proj₂ (𝕃-δ X (app x a)) (inj₂ i) with proj₂ (𝕃-δ X a) i
 
 
 
+
 𝕃-η : (X : Set) → 𝕌Hom ⊤ (𝕃 X)
 𝕃-η X tt = 𝕌SL-η end
 

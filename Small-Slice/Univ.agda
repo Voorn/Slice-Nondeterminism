@@ -153,10 +153,7 @@ proj₂ (𝕌Free-eq<-δμ S X (node σ ts)) (a , tt) =
 
 
 
-
-
 𝕌SL-⊗-⊎ : {X Y : Set} → 𝕌SL (X × Y) → 𝕌SL (X ⊎ Y) 
 𝕌SL-⊗-⊎ (I , f) = (𝕌⊎ I I) , (λ { (inj₁ i) → inj₁ (proj₁ (f i)) ;
                                   (inj₂ i) → inj₂ (proj₂ (f i))})
-
 
