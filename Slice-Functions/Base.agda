@@ -103,6 +103,11 @@ proj₁ (SF-∘-r≡ f g h (g<h , h<f)) x (i , j) = (i , (proj₁ (g<h (proj₂ 
 proj₂ (SF-∘-r≡ f g h (g<h , h<g)) x (i , j) = (i , proj₁ (h<g (proj₂ (f x) i) j)) ,
   proj₂ (h<g (proj₂ (f x) i) j)
 
+SF-∘≡ :  {X Y Z : Set} → {g g' : SF Y Z} → {f f' : SF X Y} → SF≡ g g' → SF≡ f f'
+  → SF≡ (SF-∘ f g) (SF-∘ f' g')
+SF-∘≡ {_} {_} {_} {g} {g'} {f} {f'} g≡g' f≡f' =
+  SF≡-Tran _ _ _ (SF-∘-l≡ _ _ g f≡f') (SF-∘-r≡ f' _ _ g≡g')
+
 
 -- Functor of Set into Rel
 SF-Fun : {X Y : Set} → (X → Y) → SF X Y
@@ -117,3 +122,4 @@ SF-Fun-∘ : {X Y Z : Set} → (f : X → Y) → (g : Y → Z)
   → SF≡ (SF-Fun (λ x → g (f x))) (SF-∘ (SF-Fun f) (SF-Fun g))
 proj₁ (SF-Fun-∘ f g) x tt = (tt , tt) , refl
 proj₂ (SF-Fun-∘ f g) x (tt , tt) = tt , refl
+

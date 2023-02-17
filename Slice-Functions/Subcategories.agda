@@ -105,8 +105,9 @@ SF-Fun-Onele f x i j = refl
 SF-Fun-Total : {X Y : Set} → (f : X → Y) → SF-Total (SF-Fun f)
 SF-Fun-Total f x = tt
 
---Note: Since Set's notion of equality is the eternal equivalence of Agda,
+--Note: Since Set's notion of equality is the internal equivalence of Agda,
 --SF-Fun trivially preserves equivalence
+
 
 
 --Showing that the Functor SF-Fun is bijective on morphisms (function extensionality)
@@ -120,4 +121,6 @@ SF-Fun-inv : {X Y : Set} → (f : SF X Y) → SF-Onele f → SF-Total f
 proj₁ (SF-Fun-inv f fone ftot) x = proj₂ (f x) (ftot x)
 proj₂ (SF-Fun-inv f fone ftot) = (λ x i → (ftot x) , refl) ,
                                   λ x i → tt , (fone x i (ftot x))
+
+
 

@@ -5,7 +5,11 @@ open import Data.Empty
 open import Data.Sum renaming (map to map⊎)
 open import Data.Nat hiding (_⊔_)
 open import Data.Product renaming (map to map×)
+open import Relation.Binary.Core
+
 open import Relation.Binary.PropositionalEquality hiding ([_])
+open import Relation.Binary.Structures
+open import Relation.Binary.Definitions
 
 
 -- Simultaneous definition of universes as names and their corresponding sets
@@ -37,30 +41,80 @@ data 𝕌 where
 𝕌SL : Set → Set
 𝕌SL X = Σ 𝕌 (λ S → 𝕌S S → X)
 
-
-𝕌SL-Γ : {X Y : Set} → (R : X → Y → Set) → (𝕌SL X → 𝕌SL Y → Set)
-𝕌SL-Γ R (I , f) (J , g) = Σ (𝕌S I → 𝕌S J) (λ H → (i : 𝕌S I) → R (f i) (g (H i)))
+𝕌Γ : {X Y : Set} → (R : X → Y → Set) → (𝕌SL X → 𝕌SL Y → Set)
+𝕌Γ R (I , f) (J , g) = (i : 𝕌S I) → Σ (𝕌S J) (λ j → R (f i) (g j))
 
 𝕌SL→ : (X : Set) → 𝕌SL X → 𝕌SL X → Set
-𝕌SL→ X = 𝕌SL-Γ {X} {X} _≡_
+𝕌SL→ X = 𝕌Γ {X} {X} _≡_
+
+𝕌SL≡ : {X : Set} → 𝕌SL X → 𝕌SL X → Set
+𝕌SL≡ a b = 𝕌SL→ _ a b × 𝕌SL→ _ b a
+
+-- as powerset
+𝕌SL-∈ : {X : Set} → X → 𝕌SL X → Set
+𝕌SL-∈ x (I , a) = Σ (𝕌S I) λ i → a i ≡ x
+
+𝕌SL-⊂ : {X : Set} → 𝕌SL X → 𝕌SL X → Set
+𝕌SL-⊂ {X} U V = (x : X) → 𝕌SL-∈ x U → 𝕌SL-∈ x V
+
+𝕌SL-⊂⇒map : {X : Set} → (U V : 𝕌SL X) → 𝕌SL-⊂ U V → 𝕌SL→ X U V 
+𝕌SL-⊂⇒map (I , a) (J , b) U⊂V i with U⊂V (a i) (i , refl)
+...| (j , eq) = j , sym eq
+
+𝕌SL-map⇒⊂ : {X : Set} → (U V : 𝕌SL X) → 𝕌SL→ X U V → 𝕌SL-⊂ U V 
+𝕌SL-map⇒⊂ (I , a) (J , b) U→V x (i , eq) with U→V i
+...| (j , eq') = j , (trans (sym eq') eq)
+
+-- Relator properties
+𝕌Γ-refl : {X : Set} → (R : REL X X _ ) → Reflexive R → Reflexive (𝕌Γ R)
+𝕌Γ-refl R Rrefl {I , a} i = i , (Rrefl {a i})
+
+𝕌Γ-tran : {X : Set} → (R : REL X X _) → Transitive R → Transitive (𝕌Γ R) 
+𝕌Γ-tran R Rtran {I , a} {J , b} {K , c} aRb bRc i = (proj₁ (bRc (proj₁ (aRb i)))) ,
+  Rtran (proj₂ (aRb i)) (proj₂ (bRc (proj₁ (aRb i))))
+
+𝕌Γ-⊂ : {X Y : Set} → {R S : REL X Y _} → R ⇒ S → 𝕌Γ R ⇒ 𝕌Γ S
+𝕌Γ-⊂ R⊂S a<b i = (proj₁ (a<b i)) , (R⊂S (proj₂ (a<b i)))
 
 
 
-𝕌SL-⊥ : (X : Set) → 𝕌SL X
-𝕌SL-⊥ X = 𝕌⊥ , (λ {()})
 
-𝕌SL-join : {X : Set} → 𝕌SL X → 𝕌SL X → 𝕌SL X
-𝕌SL-join (I , f) (J , g) = (𝕌⊎ I J) , (λ {(inj₁ i) → f i ; (inj₂ j) → g j})
+-- Setoid
+𝕌Rel : {X : Set} → (R : Rel X _) → (Rel (𝕌SL X) _) 
+𝕌Rel R a b = 𝕌Γ R a b × 𝕌Γ R b a
 
-𝕌SL-ℕ : {X : Set} → (X → 𝕌SL X) → ℕ → X → 𝕌SL X
-𝕌SL-ℕ f zero x = 𝕌⊤ , λ i → x
-𝕌SL-ℕ f (suc n) x = (𝕌Σ (proj₁ (f x) , λ i → proj₁ (𝕌SL-ℕ f n (proj₂ (f x) i)))) ,
-  λ {(i , j) → proj₂ (𝕌SL-ℕ f n (proj₂ (f x) i)) j}
+𝕌Rel-refl : {X : Set} → (R : Rel X _) → Reflexive R → Reflexive (𝕌Rel R)
+𝕌Rel-refl R Rrefl = (𝕌Γ-refl R Rrefl) , 𝕌Γ-refl R Rrefl
 
-𝕌SL-ω : {X : Set} → (X → 𝕌SL X) → (X → 𝕌SL X)
-𝕌SL-ω f x = (𝕌Σ (𝕌ℕ , (λ n → proj₁ (𝕌SL-ℕ f n x)))) , λ {(n , i) → proj₂ (𝕌SL-ℕ f n x) i}
+𝕌Rel-tran : {X : Set} → (R : Rel X _) → Transitive R → Transitive (𝕌Rel R)
+𝕌Rel-tran R Rtran (a<b , b<a) (b<c , c<b) =
+  𝕌Γ-tran R Rtran a<b b<c , 𝕌Γ-tran R Rtran c<b b<a
 
+𝕌Rel-⊂ : {X : Set} → {R S : Rel X _} → (R ⇒ S) → 𝕌Rel R ⇒ 𝕌Rel S
+𝕌Rel-⊂ {X} {R} {S} R⊂S (a<b , b<a) =
+  𝕌Γ-⊂ {X} {X} {R} {S} R⊂S a<b , 𝕌Γ-⊂ {X} {X} {R} {S} R⊂S b<a
 
+𝕌Rel-symm : {X : Set} → (R : Rel X _) → Symmetric R → Symmetric (𝕌Rel R)
+𝕌Rel-symm R Rsymm (a<b , b<a) = b<a , a<b
+
+𝕌Rel-equiv : {X : Set} → (R : Rel X _) → IsEquivalence R → IsEquivalence (𝕌Rel R)
+𝕌Rel-equiv R record { refl = Rrefl ; sym = Rsymm ; trans = Rtran } = record
+  { refl =  𝕌Rel-refl R Rrefl
+  ; sym =   𝕌Rel-symm R Rsymm
+  ; trans = 𝕌Rel-tran R Rtran
+  }
+
+-- homomorphisms
+𝕌SL-fun : {X Y : Set} → (X → Y) → (𝕌SL X → 𝕌SL Y)
+𝕌SL-fun f (I , a) = I , (λ x → f (a x))
+
+𝕌SL-fun-cong : {X Y : Set} → (R : Rel X _) → (S : Rel Y _) → (f : X → Y)
+  → f Preserves R ⟶ S → (𝕌SL-fun f) Preserves (𝕌Rel R) ⟶ (𝕌Rel S)
+𝕌SL-fun-cong R S f f-pres {I , a} {J , b} (a<b , b<a) =
+  (λ i → proj₁ (a<b i) , f-pres (proj₂ (a<b i)) ) ,
+  (λ i → proj₁ (b<a i) , f-pres (proj₂ (b<a i)) )
+
+-- Monad
 𝕌SL-η : {X : Set} → X → 𝕌SL X
 𝕌SL-η x = 𝕌⊤ , (λ i → x)
 
@@ -70,90 +124,15 @@ data 𝕌 where
 𝕌SL-κ : {X Y : Set} → (X → 𝕌SL Y) → (𝕌SL X → 𝕌SL Y)
 𝕌SL-κ f (I , A) = 𝕌Σ (I , (λ i → proj₁ (f (A i)))) , λ {(i , j) → proj₂ (f (A i)) j}
 
-𝕌SL-μ≡ : {X : Set} → (d d' : 𝕌SL (𝕌SL X)) → 𝕌SL-Γ (𝕌SL-Γ _≡_) d d'
-  → 𝕌SL-Γ _≡_ (𝕌SL-μ d) (𝕌SL-μ d')
-𝕌SL-μ≡ (I , f) (J , g) (H , rel) = (λ {(i , a) → (H i) , (proj₁ (rel i) a)}) ,
-  λ {(i , a) → proj₂ (rel i) a}
+𝕌SL-μ≡ : {X : Set} → (d d' : 𝕌SL (𝕌SL X)) → 𝕌Γ (𝕌Γ _≡_) d d'
+  → 𝕌Γ _≡_ (𝕌SL-μ d) (𝕌SL-μ d')
+𝕌SL-μ≡ (I , f) (J , g) H (i , x) =
+  (proj₁ (H i) , proj₁ (proj₂ (H i) x)) , proj₂ (proj₂ (H i) x)
+  
 
+𝕌SL-⊥ : {X : Set} → 𝕌SL X
+𝕌SL-⊥ = 𝕌⊥ , (λ {()})
 
---
-𝕌Hom : Set → Set → Set
-𝕌Hom X Y = X → 𝕌SL Y
-
-𝕌Hom-⊂ : {X Y : Set} → 𝕌Hom X Y → 𝕌Hom X Y → Set
-𝕌Hom-⊂ {X} {Y} f g = (x : X) → 𝕌SL→ Y (f x) (g x)
-
-𝕌Hom-id : (X : Set) → 𝕌Hom X X
-𝕌Hom-id X x = 𝕌SL-η x
-
-𝕌Hom-∘ : {X Y Z : Set} → 𝕌Hom X Y → 𝕌Hom Y Z → 𝕌Hom X Z
-𝕌Hom-∘ f g x = 𝕌SL-κ g (f x)
-
-
--- Set functor
-𝕌Hom-fun : {X Y : Set} → (X → Y) → 𝕌Hom X Y
-𝕌Hom-fun f x = 𝕌SL-η (f x)
-
-
--- Container Monad
-𝕌-Sig : Set₁
-𝕌-Sig = Σ Set λ A → A → 𝕌
-
-
-data Free (S : 𝕌-Sig) (X : Set) : Set where
-  leaf : X → Free S X
-  node : (σ : proj₁ S) → (ts : 𝕌S (proj₂ S σ) → Free S X) → Free S X
-
-Free-μ : (S : 𝕌-Sig) → (X : Set) → Free S (Free S X) → Free S X
-Free-μ S X (leaf t) = t
-Free-μ S X (node σ ts) = node σ (λ i → Free-μ S X (ts i))
-
-
-𝕌Free-μ : (S : 𝕌-Sig) → (X : Set) → 𝕌Hom (Free S (Free S X)) (Free S X)
-𝕌Free-μ S X d = 𝕌SL-η (Free-μ S X d)
-
-𝕌Free-δ : (S : 𝕌-Sig) → (X : Set) → 𝕌Hom (Free S X) (Free S (Free S X))
-𝕌Free-δ S X (leaf x) = 𝕌SL-η (leaf (leaf x))
-proj₁ (𝕌Free-δ S X (node σ ts)) = 𝕌Π (proj₂ S σ , λ i → proj₁ (𝕌Free-δ S X (ts i)))
-proj₂ (𝕌Free-δ S X (node σ ts)) f = node σ (λ i → proj₂ (𝕌Free-δ S X (ts i)) (f i))
-
-open import Extensionality
-
-𝕌Free-eq<-δμ : (S : 𝕌-Sig) → (X : Set)
-  → 𝕌Hom-⊂ (𝕌Hom-∘ (𝕌Free-δ S X) (𝕌Free-μ S X)) (𝕌Hom-id (Free S X))
-𝕌Free-eq<-δμ S X (leaf x) = (λ a → tt) , λ a → refl
-proj₁ (𝕌Free-eq<-δμ S X (node σ ts)) = (λ x → tt)
-proj₂ (𝕌Free-eq<-δμ S X (node σ ts)) (a , tt) =
-  cong (node σ) (dep-ext (λ i → proj₂ (𝕌Free-eq<-δμ S X (ts i)) (a i , tt)))
-
-
-
-𝕌SL-⊗ : {X Y  : Set} → 𝕌SL X → 𝕌SL Y → 𝕌SL (X × Y)
-𝕌SL-⊗ (I , f) (J , g) = (𝕌× I J) , (λ {(x , y) → (f x) , (g y)})
-
-𝕌SL-⊗→ : {X Y : Set} → {a a' : 𝕌SL X} → (𝕌SL→ X a a') → {b b' : 𝕌SL Y} → (𝕌SL→ Y b b')
-  → 𝕌SL→ (X × Y) (𝕌SL-⊗ a b) (𝕌SL-⊗ a' b') 
-𝕌SL-⊗→ (f , a-f->a') (g , b-g->b') = (λ {(i , j) → (f i) , (g j)}) ,
-  λ {(i , j) → cong₂ (λ x y → (x , y)) (a-f->a' i) (b-g->b' j)} 
-
-
-
-𝕌SL-⊎ : {X Y : Set} → (𝕌SL X ⊎ 𝕌SL Y) → 𝕌SL (X ⊎ Y)
-𝕌SL-⊎ (inj₁ (I , f)) = I , λ i → inj₁ (f i)
-𝕌SL-⊎ (inj₂ (J , g)) = J , λ j → inj₂ (g j)
-
-𝕌SL-⊎→1 :  {X Y : Set} → {a a' : 𝕌SL X} → (𝕌SL→ X a a')
-  → 𝕌SL→ (X ⊎ Y) (𝕌SL-⊎ (inj₁ a)) (𝕌SL-⊎ (inj₁ a')) 
-𝕌SL-⊎→1 (f , a-f->a') = f , (λ i → cong inj₁ (a-f->a' i))
-
-𝕌SL-⊎→2 :  {X Y : Set} → {b b' : 𝕌SL Y} → (𝕌SL→ Y b b')
-  → 𝕌SL→ (X ⊎ Y) (𝕌SL-⊎ (inj₂ b)) (𝕌SL-⊎ (inj₂ b')) 
-𝕌SL-⊎→2 (g , b-g->b') = g , (λ i → cong inj₂ (b-g->b' i))
-
-
-
-
-𝕌SL-⊗-⊎ : {X Y : Set} → 𝕌SL (X × Y) → 𝕌SL (X ⊎ Y) 
-𝕌SL-⊗-⊎ (I , f) = (𝕌⊎ I I) , (λ { (inj₁ i) → inj₁ (proj₁ (f i)) ;
-                                  (inj₂ i) → inj₂ (proj₂ (f i))})
+𝕌SL-⊥-⊂ : {X : Set} → (a : 𝕌SL X) → 𝕌SL→ X 𝕌SL-⊥ a
+𝕌SL-⊥-⊂ a ()
 

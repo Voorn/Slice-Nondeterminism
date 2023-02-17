@@ -1,15 +1,74 @@
 module Everything where
 
+-- The formalisation linked in this code is compatible with Agda's standard library
+-- The formalisation linked in the code of Everything+Categories.agda necessarily uses
+-- the optional "Agda categories" library
 
 -- This repository contains the development of formalisations for the category of relations,
--- via "Slice Nondeterminism", which shall be expanded upon in the future.
+-- via a technique self-named "Slice Nondeterminism".
 
--- It also contains the partial formalisation of results from the paper:
+-- A paper on Slice Nondeterminism is currently submitted for evaluation to ITP 2023.
+-- The paper focusses on the formalisation done in the Small-Slice subfolder,
+-- though it also references some other material
+
+-- The development also contains the partial formalisation of results from the paper:
 -- "Nondeterministic Runners, A Model for Interleaving Algebraic Effects"
 -- currently submitted to ICTAC 2022.
 
 
--- Slices
+-- Small Slices: the theory of Slice nondeterminism using a small universe of indexing sets
+
+
+-- Basics
+
+-- slice endo functor on a small universe of indexing sets
+open import Small-Slice.Univ
+
+-- kleisli category over the small slice endofunctor
+open import Small-Slice.ND-functions
+
+
+-- Structure of the category
+
+-- optional properties of morphisms, which specify subcategories
+open import Small-Slice.Substructure
+
+-- the category has products and coproducts
+open import Small-Slice.Cartesian
+
+-- the category has a monoidal structure associated to the Cartesian product on sets
+open import Small-Slice.Monoidal
+
+
+
+-- Joins and recursion
+
+-- the category can be enriched with a join semi-lattic structure
+open import Small-Slice.Semi-Lattice
+
+-- countable joins and omega chains
+open import Small-Slice.Countable-Join
+
+-- feedback and iteration (towards traced monoidal)
+open import Small-Slice.Feedback
+
+
+-- Example models
+
+-- free monads from Set lifted to reversible structures as nondeterministic processes
+open import Small-Slice.Container
+
+-- marbles: interleaving for lists, a model for concurrency
+open import Small-Slice.Marbles
+
+-- labelled transition systems
+open import Small-Slice.LTS
+
+
+
+
+
+-- Big Slices: Earlier development using the universe of all sets space of indexing sets
 
 -- Base definition of the category of slices
 open import Slice.Base

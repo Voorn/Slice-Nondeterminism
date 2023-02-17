@@ -122,3 +122,7 @@ ER→SF→ER R = (λ {x y ((.y , xRy) , refl) → xRy}) , λ {x y xRy → (y , x
 SF→ER→SF : {X Y : Set} → (f : SF X Y) → SF≡ (ER→SF (SF→ER f)) f
 SF→ER→SF f = (λ { x (.(proj₂ (f x) i) , i , refl) → i , refl}) ,
   λ x i → (proj₂ (f x) i , i , refl) , refl
+
+
+
+

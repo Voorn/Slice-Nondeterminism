@@ -206,3 +206,6 @@ SL-** f g (I , A) = (λ {(i , j , k) → ((i , j) , k) , refl}) ,
   (λ ijk → refl) , λ ijk → refl
 
 
+
+
+
