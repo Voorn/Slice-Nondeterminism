@@ -1,3 +1,8 @@
+Slice Nondeterminism repository, by Niels Voorneveld 
+
+Find current up to date version of this code repository at:
+https://github.com/Voorn/Slice-Nondeterminism
+
 This repository contains agda code, compiled and tested in Agda version 2.6.1.
 The code is compatible with the Agda Standard library.
 Some code is linked to the Agda Categories Library, but the main development can be used independently.

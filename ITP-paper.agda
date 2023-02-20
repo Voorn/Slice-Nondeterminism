@@ -74,7 +74,7 @@ Kleisli-property-3   =  Small-Slice.Univ.𝕌SL-Kleisli-3
 
 ⊑ = Small-Slice.Univ.𝕌SL→
 
--- Lemma 5
+-- Proposition 5
 
 import Small-Slice.Semi-Lattice
 import Small-Slice.Countable-Join
@@ -144,14 +144,14 @@ initial-map-is-unique   =  Small-Slice.Cartesian.𝕌-initia-unique
 coproduct-injection-0  =  Small-Slice.Cartesian.𝕌-copr-inj₁  
 coproduct-injection-1  =  Small-Slice.Cartesian.𝕌-copr-inj₂
 
--- Lemma 11
+-- Proposition 11
 coproduct-universal-property  =  Small-Slice.Cartesian.𝕌-copr-glue-unique
 
 
 product-projection-0  =  Small-Slice.Cartesian.𝕌-prod-proj₁  
 product-projection-1  =  Small-Slice.Cartesian.𝕌-prod-proj₂
 
--- Lemma 12
+-- Proposition 12
 product-universal-property  =  Small-Slice.Cartesian.𝕌-prod-glue-unique
 
 
@@ -214,7 +214,7 @@ T-η-is-natural  =  Small-Slice.Container.𝕌Free-η-nat
 T-μ             =  Small-Slice.Container.𝕌Free-μ
 T-μ-is-natural  =  Small-Slice.Container.𝕌Free-μ-nat
 
--- Lemma 19
+-- Proposition 19
 T-is-left-unital   =  Small-Slice.Container.𝕌Free-luni
 T-is-right-unital  =  Small-Slice.Container.𝕌Free-runi
 T-is-associative   =  Small-Slice.Container.𝕌Free-asso
