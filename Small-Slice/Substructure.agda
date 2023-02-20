@@ -15,6 +15,59 @@ open import Small-Slice.Univ
 open import Small-Slice.ND-functions
 
 
+-- E-category of external relations
+ERel : (X Y : Set) → Set₁
+ERel X Y = X → Y → Set
+
+ERel-id : (X : Set) → ERel X X
+ERel-id X x y = x ≡ y
+
+ERel-∘ : {X Y Z : Set} → ERel Y Z → ERel X Y → ERel X Z
+ERel-∘ S R x z = Σ _ λ y → R x y × S y z
+
+ERel-≡ : {X Y : Set} → (ERel X Y) → (ERel X Y) → Set
+ERel-≡ R S = (x : _) → (y : _) → ((R x y → S x y) × (S x y → R x y))
+
+
+ERel-≡-prop : (X Y : Set) → IsEquivalence (ERel-≡ {X} {Y}) 
+ERel-≡-prop X Y =
+  record {
+    refl = λ x y → (λ xRy → xRy) , λ yRx → yRx ;
+    sym = λ R≡S x y → (λ xSy → proj₂ (R≡S x y) xSy) , λ xRy → proj₁ (R≡S x y) xRy ;
+    trans = λ R≡S S≡U x y → (λ xRy → proj₁ (S≡U x y) (proj₁ (R≡S x y) xRy)) ,
+                            λ xUy → proj₂ (R≡S x y) (proj₂ (S≡U x y) xUy)
+  }
+
+ERel-luni : {X Y : Set} → (R : ERel X Y) → ERel-≡ (ERel-∘ R (ERel-id X)) R
+proj₁ (ERel-luni R x y) (.x , refl , xRy) = xRy
+proj₂ (ERel-luni R x y) xRy = x , (refl , xRy)
+
+ERel-runi : {X Y : Set} → (R : ERel X Y) → ERel-≡ (ERel-∘ (ERel-id Y) R) R
+proj₁ (ERel-runi R x y) (.y , xRy , refl) = xRy
+proj₂ (ERel-runi R x y) xRy = y , (xRy , refl)
+
+ERel-asso : {X Y Z W : Set} → (R : ERel X Y) → (S : ERel Y Z) → (U : ERel Z W)
+  → ERel-≡ (ERel-∘ (ERel-∘ U S) R) (ERel-∘ U (ERel-∘ S R))
+proj₁ (ERel-asso R S U x w) (y , xRy , z , ySz , zUw) = z , (y , xRy , ySz) , zUw
+proj₂ (ERel-asso R S U x w) (z , (y , xRy , ySz) , zUw) = y , xRy , z , ySz , zUw
+
+
+-- Functor of E-categories
+𝕌→Rel-Hom : {X Y : Set} → 𝕌Hom X Y → ERel X Y
+𝕌→Rel-Hom f x y = Σ (𝕌S (proj₁ (f x))) (λ i → proj₂ (f x) i ≡ y)
+
+𝕌→Rel-id : (X : Set) → ERel-≡ (𝕌→Rel-Hom (𝕌Hom-id X)) (ERel-id X)
+𝕌→Rel-id X x x' = (λ p → proj₂ p) , λ p → tt , p
+
+𝕌→Rel-∘ : {X Y Z : Set} → (f : 𝕌Hom X Y) → (g : 𝕌Hom Y Z)
+  → ERel-≡ (𝕌→Rel-Hom (𝕌Hom-∘ g f)) (ERel-∘ (𝕌→Rel-Hom g) (𝕌→Rel-Hom f))
+proj₁ (𝕌→Rel-∘ f g x .(proj₂ (g (proj₂ (f x) i)) j)) ((i , j) , refl)
+  = (proj₂ (f x) i) , ((i , refl) , (j , refl))
+proj₂ (𝕌→Rel-∘ f g x .(proj₂ (g (proj₂ (f x) i)) j))
+  (.(proj₂ (f x) i) , (i , refl) , j , refl)
+  = (i , j) , refl
+
+
 -- Total relations
 𝕌-Total : {X Y : Set} → 𝕌Hom X Y → Set
 𝕌-Total {X} f = (x : X) → 𝕌S (proj₁ (f x))

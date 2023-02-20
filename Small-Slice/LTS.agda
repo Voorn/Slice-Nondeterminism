@@ -52,7 +52,7 @@ proj₂ (LTS-Col A (S , t , e) (suc n) s) (a , (i , j)) =
   act a (proj₂ (LTS-Col A (S , t , e) n (proj₂ (t (s , a) ) i)) j)
 
 LTS-Colω : (A : 𝕌) → ((S , t , e) : LTS A) → 𝕌Hom S (Lis (𝕌S A))
-LTS-Colω A (S , t , e) = 𝕌Hom-⋁ (LTS-Col A (S , t , e))
+LTS-Colω A (S , t , e) = 𝕌Hom-⋁ 𝕌ℕ (LTS-Col A (S , t , e))
 
 
 -- Check if list is accepting
@@ -66,25 +66,26 @@ LTS-accept A (S , t , e) s (act a p) = Σ (𝕌S (proj₁ (t (s , a))))
 
 
 -- Collected lists are exactly accepting lists
-LTS-sound : (A : 𝕌) → ((S , t , e) : LTS A) → (s : S) → (p : Lis (𝕌S A))
+LTS-complete : (A : 𝕌) → ((S , t , e) : LTS A) → (s : S) → (p : Lis (𝕌S A))
   → LTS-accept A (S , t , e) s p → 𝕌SL-∈ p (LTS-Colω A (S , t , e) s)
-proj₁ (proj₁ (LTS-sound A (S , t , e) s uni accep)) = 0
-proj₂ (proj₁ (LTS-sound A (S , t , e) s uni accep)) with e s
+proj₁ (proj₁ (LTS-complete A (S , t , e) s uni accep)) = 0
+proj₂ (proj₁ (LTS-complete A (S , t , e) s uni accep)) with e s
 ... | true = tt
-proj₂ (LTS-sound A (S , t , e) s uni accep) with e s
+proj₂ (LTS-complete A (S , t , e) s uni accep) with e s
 ... | true = refl
-LTS-sound A (S , t , e) s (act a p) (i , accep)
-  with LTS-sound A (S , t , e) (proj₂ (t (s , a)) i) p accep
+LTS-complete A (S , t , e) s (act a p) (i , accep)
+  with LTS-complete A (S , t , e) (proj₂ (t (s , a)) i) p accep
 ... | ((n , v) , eq) = ((suc n) , (a , (i , v))) , (cong (act a) eq)
 
-LTS-adeq : (A : 𝕌) → (l : LTS A) → (s : proj₁ l) → (p : Lis (𝕌S A))
+LTS-sound : (A : 𝕌) → (l : LTS A) → (s : proj₁ l) → (p : Lis (𝕌S A))
   → 𝕌SL-∈ p (LTS-Colω A l s) → LTS-accept A l s p
-LTS-adeq A (S , t , e) s uni ((zero , v) , eq) with e s
+LTS-sound A (S , t , e) s uni ((zero , v) , eq) with e s
 ... | true = tt
-LTS-adeq A (S , t , e) s (act a p) ((zero , v) , eq) with e s
-LTS-adeq A (S , t , e) s (act a p) ((zero , ()) , eq) | false
-LTS-adeq A (S , t , e) s (act a p) ((zero , tt) , ()) | true
-LTS-adeq A (S , t , e) s (act .a .(proj₂ (LTS-Col A (S , t , e) n (proj₂ (t (s , a)) i)) v))
-  ((suc n , a , i , v) , refl) = i , (LTS-adeq A (S , t , e) (proj₂ (t (s , a)) i)
+LTS-sound A (S , t , e) s (act a p) ((zero , v) , eq) with e s
+LTS-sound A (S , t , e) s (act a p) ((zero , ()) , eq) | false
+LTS-sound A (S , t , e) s (act a p) ((zero , tt) , ()) | true
+LTS-sound A (S , t , e) s
+  (act .a .(proj₂ (LTS-Col A (S , t , e) n (proj₂ (t (s , a)) i)) v))
+  ((suc n , a , i , v) , refl) = i , (LTS-sound A (S , t , e) (proj₂ (t (s , a)) i)
   (proj₂ (LTS-Colω A (S , t , e) (proj₂ (t (s , a)) i)) (n , v)) ((n , v) , refl))
 

@@ -6,6 +6,8 @@ open import Data.Sum renaming (map to map⊎)
 open import Data.Nat hiding (_⊔_)
 open import Data.Product renaming (map to map×)
 open import Relation.Binary.Core
+open import Function.Base
+open import Agda.Primitive
 
 open import Relation.Binary.PropositionalEquality hiding ([_])
 open import Relation.Binary.Structures
@@ -49,6 +51,7 @@ data 𝕌 where
 
 𝕌SL≡ : {X : Set} → 𝕌SL X → 𝕌SL X → Set
 𝕌SL≡ a b = 𝕌SL→ _ a b × 𝕌SL→ _ b a
+
 
 -- as powerset
 𝕌SL-∈ : {X : Set} → X → 𝕌SL X → Set
@@ -108,6 +111,13 @@ data 𝕌 where
 𝕌SL-fun : {X Y : Set} → (X → Y) → (𝕌SL X → 𝕌SL Y)
 𝕌SL-fun f (I , a) = I , (λ x → f (a x))
 
+𝕌SL-fun-id : {X : Set} → (a : 𝕌SL X) → 𝕌SL-fun (id {_} {X}) a ≡ a
+𝕌SL-fun-id (I , a) = refl
+
+𝕌SL-fun-∘ : {X Y Z : Set} → (f : X → Y) → (g : Y → Z) → (a : 𝕌SL X)
+  → 𝕌SL-fun (g ∘ f) a ≡ 𝕌SL-fun g (𝕌SL-fun f a)
+𝕌SL-fun-∘ f g (I , a) = refl
+
 𝕌SL-fun-cong : {X Y : Set} → (R : Rel X _) → (S : Rel Y _) → (f : X → Y)
   → f Preserves R ⟶ S → (𝕌SL-fun f) Preserves (𝕌Rel R) ⟶ (𝕌Rel S)
 𝕌SL-fun-cong R S f f-pres {I , a} {J , b} (a<b , b<a) =
@@ -128,7 +138,84 @@ data 𝕌 where
   → 𝕌Γ _≡_ (𝕌SL-μ d) (𝕌SL-μ d')
 𝕌SL-μ≡ (I , f) (J , g) H (i , x) =
   (proj₁ (H i) , proj₁ (proj₂ (H i) x)) , proj₂ (proj₂ (H i) x)
-  
+
+
+
+-- Setoid natural transformation
+𝕌SL-η-setoid : {X Y : Set} → (f : X → Y) → (R : Rel X lzero) → (S : Rel Y _)
+  → (f Preserves R ⟶ S) → (x y : X) → (R x y)
+  → 𝕌Γ S (𝕌SL-η (f x)) (𝕌SL-fun f (𝕌SL-η y))
+𝕌SL-η-setoid f R S R-f->S x y xRy tt = tt , R-f->S xRy 
+
+𝕌SL-μ-setoid : {X Y : Set} → (f : X → Y) → (R : Rel X lzero) → (S : Rel Y _)
+  → (f Preserves R ⟶ S) → (d e : 𝕌SL (𝕌SL X)) → (𝕌Γ (𝕌Γ R) d e)
+  → 𝕌Γ S (𝕌SL-μ (𝕌SL-fun (𝕌SL-fun f) d)) (𝕌SL-fun f (𝕌SL-μ e))
+𝕌SL-μ-setoid f R S RfS d e dRe (i , j) with dRe i
+... | k , m = (k , (proj₁ (m j))) , (RfS (proj₂ (m j)))
+
+-- Consequence 1: they preserve relations
+𝕌SL-η-preserves : {X : Set} → (R : Rel X _) → (𝕌SL-η {X}) Preserves R ⟶ (𝕌Γ R)
+𝕌SL-η-preserves R xRy = (λ i → tt , xRy)
+
+
+𝕌SL-μ-preserves : {X : Set} → (R : Rel X _) → (𝕌SL-μ {X}) Preserves (𝕌Γ (𝕌Γ R)) ⟶ (𝕌Γ R)
+𝕌SL-μ-preserves R dΓΓRe (i , j) = ((proj₁ (dΓΓRe i)) , (proj₁ ((proj₂ (dΓΓRe i)) j))) ,
+  (proj₂ ((proj₂ (dΓΓRe i)) j))
+
+
+-- Consequence 2: they are natural in set
+𝕌SL-η-nat : {X Y : Set} → (f : X → Y) → (x : X)
+  → (𝕌Rel _≡_ ) (𝕌SL-η (f x)) ((𝕌SL-fun f) (𝕌SL-η x))
+𝕌SL-η-nat f x = (λ i → tt , refl) , (λ i → tt , refl)
+
+𝕌SL-μ-nat : {X Y : Set} → (f : X → Y) → (d : 𝕌SL (𝕌SL X))
+  → (𝕌Rel _≡_ ) (𝕌SL-μ (𝕌SL-fun (𝕌SL-fun f) d)) ((𝕌SL-fun f) (𝕌SL-μ d))
+proj₁ (𝕌SL-μ-nat f d) i = i , refl
+proj₂ (𝕌SL-μ-nat f d) i = i , refl
+
+
+-- Setoid monad properties
+𝕌SL-setoid-luni : {X Y : Set} → (R : Rel X _) → (a b : 𝕌SL X) → (𝕌Γ R a b)
+  → 𝕌Γ R (𝕌SL-μ (𝕌SL-η a)) b
+𝕌SL-setoid-luni R a b aRb (tt , i) = aRb i
+
+𝕌SL-setoid-runi : {X Y : Set} → (R : Rel X _) → (a b : 𝕌SL X) → (𝕌Γ R a b)
+  → 𝕌Γ R (𝕌SL-μ (𝕌SL-fun 𝕌SL-η a)) b
+𝕌SL-setoid-runi R a b aRb (i , tt) = aRb i
+
+𝕌SL-setoid-asso : {X Y : Set} → (R : Rel X _) → (a b : 𝕌SL (𝕌SL (𝕌SL X)))
+  → (𝕌Γ (𝕌Γ (𝕌Γ R)) a b) → 𝕌Γ R (𝕌SL-μ (𝕌SL-μ a)) (𝕌SL-μ (𝕌SL-fun 𝕌SL-μ b))
+𝕌SL-setoid-asso R a b aRb ((i , j) , k) with aRb i
+... | u , v = (u , (proj₁ (v j) , proj₁ (proj₂ (v j) k))) , proj₂ (proj₂ (v j) k)
+
+
+-- Kleisli triple
+𝕌SL-κ-≡ : {X Y : Set} → (f g : X → 𝕌SL Y) → ((x : X) → 𝕌SL≡ (f x) (g x))
+  → (a b : 𝕌SL X) → (𝕌SL≡ a b) → 𝕌SL≡ (𝕌SL-κ f a) (𝕌SL-κ g b)
+proj₁ (proj₁ (proj₁ (𝕌SL-κ-≡ f g f≡g a b (a<b , b<a)) (i , j))) = proj₁ (a<b i)
+proj₂ (proj₁ (proj₁ (𝕌SL-κ-≡ f g f≡g a b (a<b , b<a)) (i , j)))
+  rewrite proj₂ (a<b i) = proj₁ (proj₁ (f≡g (proj₂ b (proj₁ (a<b i)))) j)
+proj₂ (proj₁ (𝕌SL-κ-≡ f g f≡g a b (a<b , b<a)) (i , j))
+  rewrite proj₂ (a<b i) = proj₂ (proj₁ (f≡g (proj₂ b (proj₁ (a<b i)))) j) 
+proj₁ (proj₁ (proj₂ (𝕌SL-κ-≡ f g f≡g a b (a<b , b<a)) (i , j))) = proj₁ (b<a i)
+proj₂ (proj₁ (proj₂ (𝕌SL-κ-≡ f g f≡g a b (a<b , b<a)) (i , j)))
+  rewrite proj₂ (b<a i) = proj₁ (proj₂ (f≡g (proj₂ a (proj₁ (b<a i)))) j)
+proj₂ (proj₂ (𝕌SL-κ-≡ f g f≡g a b (a<b , b<a)) (i , j))
+  rewrite proj₂ (b<a i) = proj₂ (proj₂ (f≡g (proj₂ a (proj₁ (b<a i)))) j) 
+
+
+𝕌SL-Kleisli-1 : {X : Set} → (a : 𝕌SL X) → 𝕌SL≡ (𝕌SL-κ 𝕌SL-η a) a
+𝕌SL-Kleisli-1 a = (λ i → (proj₁ i) , refl) , (λ i → (i , tt) , refl)
+
+𝕌SL-Kleisli-2 : {X Y : Set} → (f : X → 𝕌SL Y) → (x : X)
+  → 𝕌SL≡ (𝕌SL-κ f (𝕌SL-η x)) (f x)
+𝕌SL-Kleisli-2 f x = (λ i → (proj₂ i) , refl) , (λ i → (tt , i) , refl)
+
+𝕌SL-Kleisli-3 : {X Y Z : Set} → (f : X → 𝕌SL Y) → (g : Y → 𝕌SL Z) → (a : 𝕌SL X)
+  → 𝕌SL≡ (𝕌SL-κ g (𝕌SL-κ f a)) (𝕌SL-κ (𝕌SL-κ g ∘ f) a)
+𝕌SL-Kleisli-3 f g a = (λ {((i , j) , k) → (i , j , k) , refl}) ,
+                       λ {(i , j , k) → ((i , j) , k) , refl}
+
 
 𝕌SL-⊥ : {X : Set} → 𝕌SL X
 𝕌SL-⊥ = 𝕌⊥ , (λ {()})

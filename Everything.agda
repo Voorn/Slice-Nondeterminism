@@ -1,5 +1,7 @@
 module Everything where
 
+-- Tested in Agda version 2.6.1
+
 -- The formalisation linked in this code is compatible with Agda's standard library
 -- The formalisation linked in the code of Everything+Categories.agda necessarily uses
 -- the optional "Agda categories" library
@@ -21,48 +23,51 @@ module Everything where
 
 -- Basics
 
--- slice endo functor on a small universe of indexing sets
+-- slice endo functor on a small universe of indexing sets (Section 2.1-2.4)
 open import Small-Slice.Univ
 
--- kleisli category over the small slice endofunctor
+-- kleisli category over the small slice endofunctor (Section 3.1)
 open import Small-Slice.ND-functions
 
 
 -- Structure of the category
 
--- optional properties of morphisms, which specify subcategories
+-- optional properties of morphisms, which specify subcategories (Section 3.2 and 3.3)
 open import Small-Slice.Substructure
 
--- the category has products and coproducts
+-- the category has products and coproducts (Section 4.1)
 open import Small-Slice.Cartesian
 
--- the category has a monoidal structure associated to the Cartesian product on sets
+-- the category has a monoidal structure associated to the Cartesian product on sets (Section 4.3)
 open import Small-Slice.Monoidal
-
 
 
 -- Joins and recursion
 
--- the category can be enriched with a join semi-lattic structure
+-- the category can be enriched with a join semi-lattic structure (Section 2.5 and 4.2)
 open import Small-Slice.Semi-Lattice
 
--- countable joins and omega chains
+-- countable joins and omega chains (Section 2.5 and 4.2)
 open import Small-Slice.Countable-Join
 
--- feedback and iteration (towards traced monoidal)
+-- feedback and iteration, towards traced monoidal (Section 6.2)
 open import Small-Slice.Feedback
 
 
 -- Example models
 
--- free monads from Set lifted to reversible structures as nondeterministic processes
+-- free monads from Set lifted to reversible structures as nondeterministic processes (Section 5)
 open import Small-Slice.Container
 
--- marbles: interleaving for lists, a model for concurrency
+-- marbles: interleaving for lists, a model for concurrency (Section 6.1)
 open import Small-Slice.Marbles
 
--- labelled transition systems
+-- labelled transition systems (Section 6.3)
 open import Small-Slice.LTS
+
+
+-- Comparison of methods: tossing coins (Section 7.1)
+open import Method-Comparison
 
 
 

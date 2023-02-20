@@ -157,56 +157,68 @@ proj₂ (𝕌Iter-chain H (suc n) x (i , j)) with proj₂ (H x) i
 
 
 𝕌Iterω : {X Y : Set} → 𝕌Hom X (Y ⊎ X) → 𝕌Hom X Y
-𝕌Iterω H = 𝕌Hom-⋁ (𝕌Iter H)
+𝕌Iterω H = 𝕌Hom-⋁ 𝕌ℕ (𝕌Iter H)
 
 𝕌Iterω-≡ : {X Y : Set} → (H K : 𝕌Hom X (Y ⊎ X)) → 𝕌Hom-≡ H K 
   → 𝕌Hom-≡ (𝕌Iterω H) (𝕌Iterω K)
-𝕌Iterω-≡ H K H≡K = 𝕌Hom-⋁-≡ (𝕌Iter H) (𝕌Iter K) (𝕌Iter-≡ H K H≡K)
+𝕌Iterω-≡ H K H≡K = 𝕌Hom-⋁-≡ 𝕌ℕ (𝕌Iter H) (𝕌Iter K) (𝕌Iter-≡ H K H≡K)
 
 𝕌Iterω-unfold : {X Y : Set} → (H : 𝕌Hom X (Y ⊎ X))
   → 𝕌Hom-≡ (𝕌Hom-∘ (𝕌-copr-glue (𝕌Hom-id _) (𝕌Iterω H)) H) (𝕌Iterω H)
 𝕌Iterω-unfold H = 𝕌Hom-≡-Trans {_} {_}
-    {𝕌Hom-∘ (𝕌-copr-glue (𝕌Hom-id _) (𝕌Hom-⋁ (𝕌Iter H))) H}
-    {𝕌Hom-⋁ (λ n → 𝕌Hom-∘ (𝕌-copr-glue (𝕌Hom-id _) (𝕌Iter H n)) H)}
-    {𝕌Hom-⋁ (𝕌Iter H)}
+    {𝕌Hom-∘ (𝕌-copr-glue (𝕌Hom-id _) (𝕌Hom-⋁ 𝕌ℕ (𝕌Iter H))) H}
+    {𝕌Hom-⋁ 𝕌ℕ (λ n → 𝕌Hom-∘ (𝕌-copr-glue (𝕌Hom-id _) (𝕌Iter H n)) H)}
+    {𝕌Hom-⋁ 𝕌ℕ (𝕌Iter H)}
       (𝕌Hom-≡-Trans {_} {_}
-      {𝕌Hom-∘ (𝕌-copr-glue (𝕌Hom-id _) (𝕌Hom-⋁ (𝕌Iter H))) H}
-      {𝕌Hom-∘ (𝕌Hom-⋁ (λ n → 𝕌-copr-glue (𝕌Hom-id _) (𝕌Iter H n))) H}
-      {𝕌Hom-⋁ (λ n → 𝕌Hom-∘ (𝕌-copr-glue (𝕌Hom-id _) (𝕌Iter H n)) H)}
-      (𝕌Hom-∘l≡ H {𝕌-copr-glue (𝕌Hom-id _) (𝕌Hom-⋁ (𝕌Iter H))}
-         {𝕌Hom-⋁ (λ n → 𝕌-copr-glue (𝕌Hom-id _) (𝕌Iter H n))}
+      {𝕌Hom-∘ (𝕌-copr-glue (𝕌Hom-id _) (𝕌Hom-⋁ 𝕌ℕ (𝕌Iter H))) H}
+      {𝕌Hom-∘ (𝕌Hom-⋁ 𝕌ℕ (λ n → 𝕌-copr-glue (𝕌Hom-id _) (𝕌Iter H n))) H}
+      {𝕌Hom-⋁ 𝕌ℕ (λ n → 𝕌Hom-∘ (𝕌-copr-glue (𝕌Hom-id _) (𝕌Iter H n)) H)}
+      (𝕌Hom-∘l≡ H {𝕌-copr-glue (𝕌Hom-id _) (𝕌Hom-⋁ 𝕌ℕ (𝕌Iter H))}
+         {𝕌Hom-⋁ 𝕌ℕ (λ n → 𝕌-copr-glue (𝕌Hom-id _) (𝕌Iter H n))}
          (𝕌Hom-⋁-copr-glue-r (𝕌Hom-id _) (𝕌Iter H)))
-      (𝕌Hom-⋁-l∘ H (λ n → 𝕌-copr-glue (𝕌Hom-id _) (𝕌Iter H n))))
+      (𝕌Hom-⋁-l∘ H 𝕌ℕ (λ n → 𝕌-copr-glue (𝕌Hom-id _) (𝕌Iter H n))))
     ((λ { x (n , i , j) → ((suc n) , (i , j)) , refl}) ,
     λ { x (suc n , i , j) → (n , (i , j)) , refl})
 
 𝕌Iterω-nat₁ : {X X' Y : Set} → (f : 𝕌Hom X X') → (H : 𝕌Hom X' (Y ⊎ X))
   → 𝕌Hom-≡ (𝕌Iterω (𝕌Hom-∘ H f)) (𝕌Hom-∘ (𝕌Iterω (𝕌Hom-∘ (𝕌Hom-⊎ (𝕌Hom-id _ , f)) H)) f)
 𝕌Iterω-nat₁ f H = 𝕌Hom-≡-Trans {_} {_}
-  {𝕌Hom-⋁ (𝕌Iter (𝕌Hom-∘ H f))}
-  {𝕌Hom-⋁ (λ n → 𝕌Hom-∘ (𝕌Iter (𝕌Hom-∘ (𝕌Hom-⊎ (𝕌Hom-id _ , f)) H) n) f)}
+  {𝕌Hom-⋁ 𝕌ℕ (𝕌Iter (𝕌Hom-∘ H f))}
+  {𝕌Hom-⋁ 𝕌ℕ (λ n → 𝕌Hom-∘ (𝕌Iter (𝕌Hom-∘ (𝕌Hom-⊎ (𝕌Hom-id _ , f)) H) n) f)}
   {𝕌Hom-∘ (𝕌Iterω (𝕌Hom-∘ (𝕌Hom-⊎ (𝕌Hom-id _ , f)) H)) f}
-    (𝕌Hom-⋁-≡ (𝕌Iter (𝕌Hom-∘ H f))
+    (𝕌Hom-⋁-≡ 𝕌ℕ (𝕌Iter (𝕌Hom-∘ H f))
               (λ n → 𝕌Hom-∘ (𝕌Iter (𝕌Hom-∘ (𝕌Hom-⊎ (𝕌Hom-id _ , f)) H) n) f)
               (𝕌Iter-nat₁ f H))
     (𝕌Hom-≡-Symm {_} {_}
       {𝕌Hom-∘ (𝕌Iterω (𝕌Hom-∘ (𝕌Hom-⊎ (𝕌Hom-id _ , f)) H)) f}
-      {𝕌Hom-⋁ (λ n → 𝕌Hom-∘ (𝕌Iter (𝕌Hom-∘ (𝕌Hom-⊎ (𝕌Hom-id _ , f)) H) n) f)}
-        (𝕌Hom-⋁-l∘ f (𝕌Iter (𝕌Hom-∘ (𝕌Hom-⊎ (𝕌Hom-id _ , f)) H))) )
+      {𝕌Hom-⋁ 𝕌ℕ (λ n → 𝕌Hom-∘ (𝕌Iter (𝕌Hom-∘ (𝕌Hom-⊎ (𝕌Hom-id _ , f)) H) n) f)}
+        (𝕌Hom-⋁-l∘ f 𝕌ℕ (𝕌Iter (𝕌Hom-∘ (𝕌Hom-⊎ (𝕌Hom-id _ , f)) H))) )
 
 
 𝕌Iterω-nat₂ : {X Y Y' : Set} → (f : 𝕌Hom Y Y') → (H : 𝕌Hom X (Y ⊎ X))
   → 𝕌Hom-≡ (𝕌Iterω (𝕌Hom-∘ (𝕌Hom-⊎ (f , 𝕌Hom-id _)) H)) (𝕌Hom-∘ f (𝕌Iterω H))
 𝕌Iterω-nat₂ f H = 𝕌Hom-≡-Trans {_} {_}
   {𝕌Iterω (𝕌Hom-∘ (𝕌Hom-⊎ (f , 𝕌Hom-id _)) H)}
-  {𝕌Hom-⋁ (λ n → 𝕌Hom-∘ f (𝕌Iter H n))}
+  {𝕌Hom-⋁ 𝕌ℕ (λ n → 𝕌Hom-∘ f (𝕌Iter H n))}
   {𝕌Hom-∘ f (𝕌Iterω H)}
-      (𝕌Hom-⋁-≡ (𝕌Iter (𝕌Hom-∘ (𝕌Hom-⊎ (f , 𝕌Hom-id _)) H)) (λ n → 𝕌Hom-∘ f (𝕌Iter H n))
+      (𝕌Hom-⋁-≡ 𝕌ℕ (𝕌Iter (𝕌Hom-∘ (𝕌Hom-⊎ (f , 𝕌Hom-id _)) H)) (λ n → 𝕌Hom-∘ f (𝕌Iter H n))
       λ n → 𝕌Iter-nat₂ f H n  )
-  (𝕌Hom-≡-Symm {_} {_} {𝕌Hom-∘ f (𝕌Iterω H)} {𝕌Hom-⋁ (λ n → 𝕌Hom-∘ f (𝕌Iter H n))}
-      (𝕌Hom-⋁-r∘ (𝕌Iter H) f))
+  (𝕌Hom-≡-Symm {_} {_} {𝕌Hom-∘ f (𝕌Iterω H)} {𝕌Hom-⋁ 𝕌ℕ (λ n → 𝕌Hom-∘ f (𝕌Iter H n))}
+      (𝕌Hom-⋁-r∘ 𝕌ℕ (𝕌Iter H) f))
 
 
+⊎αm : {X Y : Set} → ((X ⊎ Y) ⊎ X) → (X ⊎ Y)
+⊎αm (inj₁ (inj₁ x)) = inj₁ x
+⊎αm (inj₁ (inj₂ y)) = inj₂ y
+⊎αm (inj₂ x) = inj₁ x
+
+⊎αs : {X Y Z : Set} → ((X ⊎ Y) ⊎ Z) → (X ⊎ (Z ⊎ Y))
+⊎αs (inj₁ (inj₁ x)) = inj₁ x
+⊎αs (inj₁ (inj₂ y)) = inj₂ (inj₂ y)
+⊎αs (inj₂ z) = inj₂ (inj₁ z)
+
+𝕌State-comp : {X Y Z : Set} → (𝕌Hom X (Y ⊎ X)) → (𝕌Hom Y (Z ⊎ Y)) → 𝕌Hom (X ⊎ Y) (Z ⊎ (X ⊎ Y))
+𝕌State-comp H K = (𝕌Hom-∘ (𝕌Hom-∘ (𝕌Hom-fun ⊎αs) (λ yxy → (𝕌Hom-⊎ (K , (𝕌Hom-id _))) (⊎αm yxy))) (𝕌Hom-⊎ (H , 𝕌Hom-id _)))
 
 
 

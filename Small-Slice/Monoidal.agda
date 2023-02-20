@@ -9,6 +9,7 @@ open import Relation.Binary.PropositionalEquality hiding ([_])
 
 open import Small-Slice.Univ
 open import Small-Slice.ND-functions
+open import Small-Slice.Substructure
 
 
 
@@ -70,14 +71,16 @@ open import Small-Slice.ND-functions
 proj₁ 𝕌Hom-⊗-∘ (x , y) ((i , j) , (i' , j')) = ((i , i') , (j , j')) , refl
 proj₂ 𝕌Hom-⊗-∘ (x , y) ((i , i') , (j , j')) = ((i , j) , (i' , j')) , refl
 
-𝕌Hom-⊗-≡ : {A B : Set × Set} → {f g : 𝕌Bihom A B} → 𝕌Bihom-≡ f g
-  → 𝕌Hom-≡ (𝕌Hom-⊗ f) (𝕌Hom-⊗ g)
-proj₁ (𝕌Hom-⊗-≡ ((f₀⊂g₀ , g₀⊂f₀) , (f₁⊂g₁ , g₁⊂f₁))) (x , y) (i , j) =
+𝕌Hom-⊗-⊂ : {A B : Set × Set} → {f g : 𝕌Bihom A B} → 𝕌Bihom-⊂ f g
+  → 𝕌Hom-⊂ (𝕌Hom-⊗ f) (𝕌Hom-⊗ g)
+𝕌Hom-⊗-⊂ (f₀⊂g₀ , f₁⊂g₁) (x , y) (i , j) =
   ((proj₁ (f₀⊂g₀ x i)) , (proj₁ (f₁⊂g₁ y j))) ,
   (cong₂ _,_ (proj₂ (f₀⊂g₀ x i)) (proj₂ (f₁⊂g₁ y j)))
-proj₂ (𝕌Hom-⊗-≡ ((f₀⊂g₀ , g₀⊂f₀) , (f₁⊂g₁ , g₁⊂f₁))) (x , y) (i , j) =
-  ((proj₁ (g₀⊂f₀ x i)) , (proj₁ (g₁⊂f₁ y j))) ,
-  (cong₂ _,_ (proj₂ (g₀⊂f₀ x i)) (proj₂ (g₁⊂f₁ y j)))
+
+𝕌Hom-⊗-≡ : {A B : Set × Set} → {f g : 𝕌Bihom A B} → 𝕌Bihom-≡ f g
+  → 𝕌Hom-≡ (𝕌Hom-⊗ f) (𝕌Hom-⊗ g)
+𝕌Hom-⊗-≡ ((f₀⊂g₀ , g₀⊂f₀) , (f₁⊂g₁ , g₁⊂f₁)) = 𝕌Hom-⊗-⊂ (f₀⊂g₀ , f₁⊂g₁) ,
+  𝕌Hom-⊗-⊂ (g₀⊂f₀ , g₁⊂f₁)
 
 
 -- Monoidal
@@ -121,6 +124,34 @@ proj₂ (𝕌Hom-⊗-≡ ((f₀⊂g₀ , g₀⊂f₀) , (f₁⊂g₁ , g₁⊂f�
 
 
 
+-- Comonoid structure
+𝕌Hom-delete : {X : Set} → 𝕌Hom X ⊤
+𝕌Hom-delete x = 𝕌SL-η tt
+
+𝕌Hom-copy : {X : Set} → 𝕌Hom X (X × X)
+𝕌Hom-copy x = 𝕌SL-η (x , x)
+
+
+-- Comonoid naturality conditions
+𝕌Hom-delete-nat' : {X Y : Set} → (f : 𝕌Hom X Y)
+  → 𝕌Hom-⊂ (𝕌Hom-∘ 𝕌Hom-delete f) 𝕌Hom-delete 
+𝕌Hom-delete-nat' f x i = tt , refl
+
+𝕌Hom-delete-nat : {X Y : Set} → (f : 𝕌Hom X Y) → (𝕌-Total f)
+  → 𝕌Hom-≡ (𝕌Hom-∘ 𝕌Hom-delete f) 𝕌Hom-delete 
+proj₁ (𝕌Hom-delete-nat f f-tot) = 𝕌Hom-delete-nat' f
+proj₂ (𝕌Hom-delete-nat f f-tot) x tt = ((f-tot x) , tt) , refl
+
+
+𝕌Hom-copy-nat' : {X Y : Set} → (f : 𝕌Hom X Y)
+  → 𝕌Hom-⊂ (𝕌Hom-∘ 𝕌Hom-copy f) (𝕌Hom-∘ (𝕌Hom-⊗ (f , f)) 𝕌Hom-copy)
+𝕌Hom-copy-nat' f x (i , tt) = (tt , (i , i)) , refl
+
+𝕌Hom-copy-nat : {X Y : Set} → (f : 𝕌Hom X Y) → (𝕌-Deter f)
+  → 𝕌Hom-≡ (𝕌Hom-∘ 𝕌Hom-copy f) (𝕌Hom-∘ (𝕌Hom-⊗ (f , f)) 𝕌Hom-copy)
+proj₁ (𝕌Hom-copy-nat f f-det) = 𝕌Hom-copy-nat' f
+proj₂ (𝕌Hom-copy-nat f f-det) x (tt , i , j) = (i , tt) ,
+  (cong (λ z → proj₂ (f x) i , z) (sym (f-det x i j)))
 
 
 -- product ⊎

@@ -14,31 +14,43 @@ open import Small-Slice.Semi-Lattice
 
 
 
-𝕌SL-⋁ : {X : Set} → (ℕ → 𝕌SL X) → 𝕌SL X
-𝕌SL-⋁ f = (𝕌Σ (𝕌ℕ , (λ n → proj₁ (f n)))) , λ {(n , i) → proj₂ (f n) i}
+𝕌SL-⋁ : {X : Set} → (U : 𝕌) → (𝕌S U → 𝕌SL X) → 𝕌SL X
+𝕌SL-⋁ U f = (𝕌Σ (U , (λ n → proj₁ (f n)))) , λ {(n , i) → proj₂ (f n) i}
 
 𝕌SL-chain : {X : Set} → ((ℕ → 𝕌SL X) → Set)
 𝕌SL-chain S = (n : ℕ) → 𝕌SL→ _ (S n) (S (suc n))
 
 
-𝕌Hom-⋁ : {X Y : Set} → (ℕ → 𝕌Hom X Y) → 𝕌Hom X Y
-𝕌Hom-⋁ S x = 𝕌SL-⋁ (λ n → S n x)
+𝕌SL-⋁-upper : {X : Set} → (U : 𝕌) → (C : 𝕌S U → 𝕌SL X)
+  → (i : 𝕌S U) → 𝕌SL→ X (C i) (𝕌SL-⋁ U C)
+𝕌SL-⋁-upper U C i j = (i , j) , refl
 
-𝕌Hom-⋁-≡ : {X Y : Set} → (C D : ℕ → 𝕌Hom X Y) → ((n : ℕ) → 𝕌Hom-≡ (C n) (D n))
-  → 𝕌Hom-≡ (𝕌Hom-⋁ C) (𝕌Hom-⋁ D)
-𝕌Hom-⋁-≡ C D C≡D =
+𝕌SL-⋁-supremum : {X : Set} → (U : 𝕌) → (C : 𝕌S U → 𝕌SL X)
+  → (S : 𝕌SL X) → ((i : 𝕌S U) → 𝕌SL→ X (C i) S) → 𝕌SL→ X (𝕌SL-⋁ U C) S
+𝕌SL-⋁-supremum U C S C<S (i , j) = C<S i j
+
+
+𝕌Hom-⋁ : {X Y : Set} → (U : 𝕌) → (𝕌S U → 𝕌Hom X Y) → 𝕌Hom X Y
+𝕌Hom-⋁ U S x = 𝕌SL-⋁ U (λ n → S n x)
+
+𝕌Hom-⋁-≡ : {X Y : Set} → (U : 𝕌) → (C D : 𝕌S U → 𝕌Hom X Y)
+  → ((n : 𝕌S U) → 𝕌Hom-≡ (C n) (D n))
+  → 𝕌Hom-≡ (𝕌Hom-⋁ U C) (𝕌Hom-⋁ U D)
+𝕌Hom-⋁-≡ U C D C≡D =
   (λ { x (n , i) → (n , (proj₁ (proj₁ (C≡D n) x i))) , (proj₂ (proj₁ (C≡D n) x i))}) ,
    λ { x (n , i) → (n , (proj₁ (proj₂ (C≡D n) x i))) , (proj₂ (proj₂ (C≡D n) x i))}
 
-𝕌Hom-⋁-l∘ : {X Y Z : Set} → (f : 𝕌Hom X Y) → (S : ℕ → 𝕌Hom Y Z)
-  → 𝕌Hom-≡ (𝕌Hom-∘ (𝕌Hom-⋁ S) f) (𝕌Hom-⋁ (λ n → 𝕌Hom-∘ (S n) f))
-proj₁ (𝕌Hom-⋁-l∘ f S) x (i , n , j) = (n , i , j) , refl
-proj₂ (𝕌Hom-⋁-l∘ f S) x (n , i , j) = (i , n , j) , refl
+𝕌Hom-⋁-l∘ : {X Y Z : Set} → (f : 𝕌Hom X Y) → (U : 𝕌) → (S : 𝕌S U → 𝕌Hom Y Z)
+  → 𝕌Hom-≡ (𝕌Hom-∘ (𝕌Hom-⋁ U S) f) (𝕌Hom-⋁ U (λ n → 𝕌Hom-∘ (S n) f))
+proj₁ (𝕌Hom-⋁-l∘ U f S) x (i , n , j) = (n , i , j) , refl
+proj₂ (𝕌Hom-⋁-l∘ U f S) x (n , i , j) = (i , n , j) , refl
 
-𝕌Hom-⋁-r∘ : {X Y Z : Set} → (S : ℕ → 𝕌Hom X Y) → (f : 𝕌Hom Y Z) 
-  → 𝕌Hom-≡ (𝕌Hom-∘ f (𝕌Hom-⋁ S)) (𝕌Hom-⋁ (λ n → 𝕌Hom-∘ f (S n)))
-proj₁ (𝕌Hom-⋁-r∘ S f) x ((n , i) , j) = (n , i , j) , refl
-proj₂ (𝕌Hom-⋁-r∘ S f) x (n , i , j) = ((n , i) , j) , refl
+𝕌Hom-⋁-r∘ : {X Y Z : Set} → (U : 𝕌) → (S : 𝕌S U → 𝕌Hom X Y) → (f : 𝕌Hom Y Z) 
+  → 𝕌Hom-≡ (𝕌Hom-∘ f (𝕌Hom-⋁ U S)) (𝕌Hom-⋁ U (λ n → 𝕌Hom-∘ f (S n)))
+proj₁ (𝕌Hom-⋁-r∘ U S f) x ((n , i) , j) = (n , i , j) , refl
+proj₂ (𝕌Hom-⋁-r∘ U S f) x (n , i , j) = ((n , i) , j) , refl
+
+
 
 
 -- just proving what I need for feedback to work
@@ -46,7 +58,7 @@ proj₂ (𝕌Hom-⋁-r∘ S f) x (n , i , j) = ((n , i) , j) , refl
 open import Small-Slice.Cartesian
 
 𝕌Hom-⋁-copr-glue-r : {X Y Z : Set} → (f : 𝕌Hom X Z) → (C : ℕ → 𝕌Hom Y Z)
-  → 𝕌Hom-≡ (𝕌-copr-glue f (𝕌Hom-⋁ C)) (𝕌Hom-⋁ (λ n → 𝕌-copr-glue f (C n)))
+  → 𝕌Hom-≡ (𝕌-copr-glue f (𝕌Hom-⋁ 𝕌ℕ C)) (𝕌Hom-⋁ 𝕌ℕ (λ n → 𝕌-copr-glue f (C n)))
 proj₁ (𝕌Hom-⋁-copr-glue-r f C) (inj₁ x) i = (zero , i) , refl
 proj₁ (𝕌Hom-⋁-copr-glue-r f C) (inj₂ y) (n , i) = (n , i) , refl
 proj₂ (𝕌Hom-⋁-copr-glue-r f C) (inj₁ x) (n , i) = i , refl
@@ -106,9 +118,46 @@ proj₂ (𝕌Hom-⋁-copr-glue-r f C) (inj₂ y) (n , i) = (n , i) , refl
 
 𝕌Hom-⋁-∘ : {X Y Z : Set} → (F : ℕ → 𝕌Hom X Y) → (G : ℕ → 𝕌Hom Y Z)
   → 𝕌Hom-chain F → 𝕌Hom-chain G
-  → 𝕌Hom-≡ (𝕌Hom-∘ (𝕌Hom-⋁ G) (𝕌Hom-⋁ F)) (𝕌Hom-⋁ (λ n → 𝕌Hom-∘ (G n) (F n)))
+  → 𝕌Hom-≡ (𝕌Hom-∘ (𝕌Hom-⋁ 𝕌ℕ G) (𝕌Hom-⋁ 𝕌ℕ F)) (𝕌Hom-⋁ 𝕌ℕ (λ n → 𝕌Hom-∘ (G n) (F n)))
 proj₁ (𝕌Hom-⋁-∘ F G F-chain G-chain) x ((n , i) , (m , j))
   with 𝕌Hom-∘⊂ {_} {_} {_} {F n} {F (n ⊔ m)} {G m} {G (n ⊔ m)}
                (𝕌Hom-chain-lmax F F-chain n m) (𝕌Hom-chain-rmax G G-chain n m) x (i , j)
 ... | (u , v) , eq = ((n ⊔ m) , (u , v)) , eq
 proj₂ (𝕌Hom-⋁-∘ F G F-chain G-chain) x (n , i , j) = ((n , i) , (n , j)) , refl
+
+
+open import Small-Slice.Monoidal
+
+𝕌Hom-chain-⊎ : {X Y Z W : Set} → (F : ℕ → 𝕌Hom X Y) → (G : ℕ → 𝕌Hom Z W)
+  → 𝕌Hom-chain F → 𝕌Hom-chain G → 𝕌Hom-chain (λ n → 𝕌Hom-⊎ (F n , G n))
+𝕌Hom-chain-⊎ F G F-chain G-chain n (inj₁ x) i =
+  (proj₁ (F-chain n x i)) , (cong inj₁ (proj₂ (F-chain n x i)))
+𝕌Hom-chain-⊎ F G F-chain G-chain n (inj₂ z) i =
+  (proj₁ (G-chain n z i)) , (cong inj₂ (proj₂ (G-chain n z i)))
+
+
+𝕌Hom-⋁-⊎ : {X Y Z W : Set} → (F : ℕ → 𝕌Hom X Y) → (G : ℕ → 𝕌Hom Z W)
+  → 𝕌Hom-chain F → 𝕌Hom-chain G
+  → 𝕌Hom-≡ (𝕌Hom-⊎ (𝕌Hom-⋁ 𝕌ℕ F , 𝕌Hom-⋁ 𝕌ℕ G)) (𝕌Hom-⋁ 𝕌ℕ (λ n → 𝕌Hom-⊎ (F n , G n)))
+proj₁ (𝕌Hom-⋁-⊎ F G F-chain G-chain) (inj₁ x) i = i , refl
+proj₁ (𝕌Hom-⋁-⊎ F G F-chain G-chain) (inj₂ z) i = i , refl
+proj₂ (𝕌Hom-⋁-⊎ F G F-chain G-chain) (inj₁ x) i = i , refl
+proj₂ (𝕌Hom-⋁-⊎ F G F-chain G-chain) (inj₂ z) i = i , refl
+
+
+𝕌Hom-chain-⊗ : {X Y Z W : Set} → (F : ℕ → 𝕌Hom X Y) → (G : ℕ → 𝕌Hom Z W)
+  → 𝕌Hom-chain F → 𝕌Hom-chain G → 𝕌Hom-chain (λ n → 𝕌Hom-⊗ (F n , G n))
+𝕌Hom-chain-⊗ F G F-chain G-chain n (x , z) (i , j) =
+  ((proj₁ (F-chain n x i)) , (proj₁ (G-chain n z j))) ,
+  (cong₂ (λ a b → a , b) (proj₂ (F-chain n x i)) (proj₂ (G-chain n z j)))
+
+
+𝕌Hom-⋁-⊗ : {X Y Z W : Set} → (F : ℕ → 𝕌Hom X Y) → (G : ℕ → 𝕌Hom Z W)
+  → 𝕌Hom-chain F → 𝕌Hom-chain G
+  → 𝕌Hom-≡ (𝕌Hom-⊗ (𝕌Hom-⋁ 𝕌ℕ F , 𝕌Hom-⋁ 𝕌ℕ G)) (𝕌Hom-⋁ 𝕌ℕ (λ n → 𝕌Hom-⊗ (F n , G n)))
+proj₁ (𝕌Hom-⋁-⊗ F G F-chain G-chain) xz ((n , i) , (m , j))
+  with 𝕌Hom-⊗-⊂  {_} {_} {F n , G m} {F (n ⊔ m) , G (n ⊔ m)}
+       ((𝕌Hom-chain-lmax F F-chain n m) , (𝕌Hom-chain-rmax G G-chain n m)) xz (i , j)
+... | (u , eq) = ((n ⊔ m) , u) , eq
+proj₂ (𝕌Hom-⋁-⊗ F G F-chain G-chain) (x , z) (n , i , j) = ((n , i) , n , j) , refl
+
