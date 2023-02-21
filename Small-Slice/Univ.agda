@@ -1,15 +1,18 @@
 module Small-Slice.Univ where
 
+-- standard library
 open import Data.Unit
 open import Data.Empty
-open import Data.Sum renaming (map to map⊎)
-open import Data.Nat hiding (_⊔_)
-open import Data.Product renaming (map to map×)
-open import Relation.Binary.Core
+open import Data.Sum
+open import Data.Nat
+open import Data.Product
+
 open import Function.Base
+
 open import Agda.Primitive
 
-open import Relation.Binary.PropositionalEquality hiding ([_])
+open import Relation.Binary.Core
+open import Relation.Binary.PropositionalEquality
 open import Relation.Binary.Structures
 open import Relation.Binary.Definitions
 
@@ -67,6 +70,7 @@ data 𝕌 where
 𝕌SL-map⇒⊂ : {X : Set} → (U V : 𝕌SL X) → 𝕌SL→ X U V → 𝕌SL-⊂ U V 
 𝕌SL-map⇒⊂ (I , a) (J , b) U→V x (i , eq) with U→V i
 ...| (j , eq') = j , (trans (sym eq') eq)
+
 
 -- Relator properties
 𝕌Γ-refl : {X : Set} → (R : REL X X _ ) → Reflexive R → Reflexive (𝕌Γ R)
@@ -138,7 +142,6 @@ data 𝕌 where
   → 𝕌Γ _≡_ (𝕌SL-μ d) (𝕌SL-μ d')
 𝕌SL-μ≡ (I , f) (J , g) H (i , x) =
   (proj₁ (H i) , proj₁ (proj₂ (H i) x)) , proj₂ (proj₂ (H i) x)
-
 
 
 -- Setoid natural transformation
@@ -223,3 +226,27 @@ proj₂ (proj₂ (𝕌SL-κ-≡ f g f≡g a b (a<b , b<a)) (i , j))
 𝕌SL-⊥-⊂ : {X : Set} → (a : 𝕌SL X) → 𝕌SL→ X 𝕌SL-⊥ a
 𝕌SL-⊥-⊂ a ()
 
+
+𝕌SL-η⊂⇒∈ : {X : Set} → (x : X) → (a : 𝕌SL X)
+  → 𝕌SL→ X (𝕌SL-η x) a
+  → 𝕌SL-∈ x a
+𝕌SL-η⊂⇒∈ x a ηx⊂a = (proj₁ (ηx⊂a tt)) , sym (proj₂ (ηx⊂a tt))
+
+
+𝕌SL-∈⇒η⊂ : {X : Set} → (x : X) → (a : 𝕌SL X)
+  → 𝕌SL-∈ x a
+  → 𝕌SL→ X (𝕌SL-η x) a
+𝕌SL-∈⇒η⊂ x a x∈a tt = (proj₁ x∈a) , (sym (proj₂ x∈a))
+
+
+𝕌SL-μ⊂⇒∈⊂ : {X : Set} → (d : 𝕌SL (𝕌SL X)) → (a : 𝕌SL X)
+  → 𝕌SL→ X (𝕌SL-μ d) a
+  → ((u : 𝕌SL X) → 𝕌SL-∈ u d → 𝕌SL→ X u a)
+𝕌SL-μ⊂⇒∈⊂ d a μd⊂a u u∈d i with u∈d
+... | j , refl = (proj₁ (μd⊂a (j , i))) , proj₂ (μd⊂a (j , i))
+
+
+𝕌SL-∈⊂⇒μ⊂ : {X : Set} → (d : 𝕌SL (𝕌SL X)) → (a : 𝕌SL X)
+  → ((u : 𝕌SL X) → 𝕌SL-∈ u d → 𝕌SL→ X u a)
+  → 𝕌SL→ X (𝕌SL-μ d) a
+𝕌SL-∈⊂⇒μ⊂ d a hyp (i , j) = hyp (proj₂ d i) (i , refl) j  

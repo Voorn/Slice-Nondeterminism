@@ -1,28 +1,31 @@
 module Small-Slice.Container where
 
+-- standard library
 open import Data.Unit
 open import Data.Empty
-open import Data.Sum renaming (map to map⊎)
-open import Data.Nat hiding (_⊔_)
-open import Data.Product renaming (map to map×)
-open import Relation.Binary.Core
+open import Data.Sum
+open import Data.Nat
+open import Data.Product
+
 open import Function.Base
 
-open import Relation.Binary.PropositionalEquality hiding ([_])
+open import Relation.Binary.Core
+open import Relation.Binary.PropositionalEquality
 open import Relation.Binary.Structures
 open import Relation.Binary.Definitions
 
+-- local
 open import Small-Slice.Univ
 open import Small-Slice.ND-functions
 
 open import Extensionality
 
 
--- Container Monad
+-- Containers / Signature
 𝕌-Sig : Set₁
 𝕌-Sig = Σ Set λ A → A → 𝕌
 
-
+-- Free monad
 data Free (S : 𝕌-Sig) (X : Set) : Set where
   leaf : X → Free S X
   node : (σ : proj₁ S) → (ts : 𝕌S (proj₂ S σ) → Free S X) → Free S X
@@ -35,6 +38,7 @@ Free-map S f (node σ ts) = node σ (λ i → Free-map S f (ts i))
 𝕊Hom-≡ : {X Y : Set} → (X → Y) → (X → Y) → Set
 𝕊Hom-≡ {X} f g  = (x : X) → f x ≡ g x
 
+-- functoriality
 Free-map-id : (S : 𝕌-Sig) → (X : Set) → 𝕊Hom-≡ (Free-map S (id {_} {X})) id 
 Free-map-id S X (leaf x) = refl
 Free-map-id S X (node σ ts) = cong (node σ) (dep-ext (λ i → Free-map-id S X (ts i)))
@@ -44,7 +48,7 @@ Free-map-comp : (S : 𝕌-Sig) → {X Y Z : Set} → (f : X → Y) → (g : Y �
 Free-map-comp S f g (leaf x) = refl
 Free-map-comp S f g (node σ ts) = cong (node σ) (dep-ext (λ i → Free-map-comp S f g (ts i)))
 
-
+-- monad transformations
 Free-η : (S : 𝕌-Sig) → (X : Set) → X → Free S X
 Free-η S X = leaf
 
@@ -62,7 +66,7 @@ Free-μ-nat S f (leaf t) = refl
 Free-μ-nat S f (node σ ds) = cong (node σ) (dep-ext (λ i → Free-μ-nat S f (ds i)))
 
 
-
+-- monad properties
 Free-luni : (S : 𝕌-Sig) → (X : Set)
   → 𝕊Hom-≡ ((Free-μ S X) ∘ (Free-η S (Free S X))) id
 Free-luni S X t = refl
@@ -77,7 +81,6 @@ Free-asso : (S : 𝕌-Sig) → (X : Set)
            ((Free-μ S X) ∘ (Free-map S (Free-μ S X)))
 Free-asso S X (leaf d) = refl
 Free-asso S X (node σ qs) = cong (node σ) (dep-ext (λ i → Free-asso S X (qs i)))
-
 
 
 -- Lifting to nondeterministic functions
@@ -154,9 +157,7 @@ proj₂ (proj₂ (SF-F-∘ S f g) (node σ ts) (i , j)) = cong (node σ) (fun-ex
 
 
 
-
-
-
+-- monad transformation in 𝕌Hom
 𝕌Free-η : (S : 𝕌-Sig) → (X : Set) → 𝕌Hom X (Free S X)
 𝕌Free-η S X x = 𝕌SL-η (Free-η S X x)
 
@@ -252,7 +253,7 @@ proj₂ (𝕌Free-asso S X) (node σ qs) (i , tt) = (tt , tt) ,
 
 
 
--- cut monad morphism
+-- cut monad function
 𝕌-Sig-+ : 𝕌-Sig → 𝕌-Sig → 𝕌-Sig
 𝕌-Sig-+ (O , a) (Q , b) = (O ⊎ Q) , λ {(inj₁ σ) → a σ ; (inj₂ σ) → b σ}
 
@@ -283,7 +284,7 @@ proj₂ (𝕌Free-asso S X) (node σ qs) (i , tt) = (tt , tt) ,
 
 open import Small-Slice.Substructure
 
-
+-- dagger operations
 𝕌Free-η-ε-† : (S : 𝕌-Sig) → (X : Set) → 𝕌-is-† (𝕌Free-η S X) (𝕌Free-ε S X)
 proj₁ (𝕌Free-η-ε-† S X) x tt = tt , refl
 proj₂ (𝕌Free-η-ε-† S X) (leaf x) tt = tt , refl
@@ -299,6 +300,7 @@ proj₂ (𝕌Free-μ-δ-† S X) (node σ ts) (inj₁ tt) = tt , refl
 proj₂ (𝕌Free-μ-δ-† S X) (node σ ts) (inj₂ C) = tt ,
       cong (node σ) (fun-ext (λ i → proj₂ (proj₂ (𝕌Free-μ-δ-† S X) (ts i) (C i))))
 
+-- inverses
 𝕌Free-eq-με : (S : 𝕌-Sig) → (X : Set)
   → 𝕌Hom-≡ (𝕌Hom-∘ (𝕌Free-ε S X) (𝕌Free-μ S X)) (𝕌Hom-∘ (𝕌Free-ε S X) (𝕌Free-ε S (Free S X)))
 proj₁ (𝕌Free-eq-με S X) (leaf (leaf x)) (tt , tt) = (tt , tt) , refl

@@ -3,9 +3,9 @@ module Relations.Category where
 -- Agda standard library
 open import Data.Unit
 open import Data.Empty
-open import Data.Sum renaming (map to map⊎)
-open import Data.Product renaming (map to map×)
-open import Relation.Binary.PropositionalEquality hiding ([_])
+open import Data.Sum
+open import Data.Product
+open import Relation.Binary.PropositionalEquality
 
 -- Categories library
 open import Categories.Category.Instance.Rels
@@ -15,7 +15,7 @@ open import Categories.NaturalTransformation.NaturalIsomorphism hiding (refl ; s
 open import Categories.Category
 open import Categories.Functor
 
--- Development library
+-- local
 open import Relations.Cat-Equivalences
 open import Relations.Ext-Rel
 open import Slice-Functions.Base
@@ -23,6 +23,7 @@ open import Slice-Functions.Category
 open import Relations.Ext-Rel
 
 
+-- E-category of relations
 ER-Cat : Category _ _ _
 ER-Cat = record
   { Obj = Set
@@ -42,9 +43,6 @@ ER-Cat = record
     }
   ; ∘-resp-≈ = ER-∘≡ 
   }
-
-
-
 
 SF→ER-Func : Functor SF-Cat ER-Cat
 SF→ER-Func = record

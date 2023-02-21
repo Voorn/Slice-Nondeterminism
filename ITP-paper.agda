@@ -7,8 +7,6 @@ module ITP-paper where
 
 import Small-Slice.ND-functions
 import Small-Slice.Substructure
-import Small-Slice.Cartesian
-
 
 -------------------------------------
 -- Section 2:  Powerset via Slices --
@@ -74,6 +72,11 @@ Kleisli-property-3   =  Small-Slice.Univ.𝕌SL-Kleisli-3
 
 ⊑ = Small-Slice.Univ.𝕌SL→
 
+∈-relation  =  Small-Slice.Univ.𝕌SL-∈
+⊆-relation  =  Small-Slice.Univ.𝕌SL-⊂
+⊆⇒⊑        =  Small-Slice.Univ.𝕌SL-⊂⇒map
+⊑⇒⊆        =  Small-Slice.Univ.𝕌SL-map⇒⊂
+
 -- Proposition 5
 
 import Small-Slice.Semi-Lattice
@@ -128,6 +131,8 @@ Morphism-is-daggerable  =  Small-Slice.Substructure.𝕌-Dagger
 -- Section 4:  Categorical Structures --
 ----------------------------------------
 
+import Small-Slice.Cartesian
+import Small-Slice.Monoidal
 
 Set→SNF-functor  =  Small-Slice.ND-functions.𝕌Hom-fun
 
@@ -140,24 +145,35 @@ terminal-map-is-unique  =  Small-Slice.Cartesian.𝕌-termin-unique
 initial-map             =  Small-Slice.Cartesian.𝕌-initia
 initial-map-is-unique   =  Small-Slice.Cartesian.𝕌-initia-unique
 
+⊎-bifunctor  =  Small-Slice.Monoidal.𝕌Hom-⊎
 
-coproduct-injection-0  =  Small-Slice.Cartesian.𝕌-copr-inj₁  
-coproduct-injection-1  =  Small-Slice.Cartesian.𝕌-copr-inj₂
+
+coproduct-injection-1  =  Small-Slice.Cartesian.𝕌-copr-inj₁  
+coproduct-injection-2  =  Small-Slice.Cartesian.𝕌-copr-inj₂
 
 -- Proposition 11
 coproduct-universal-property  =  Small-Slice.Cartesian.𝕌-copr-glue-unique
 
+merge           =  Small-Slice.Monoidal.𝕌-merge
+merge-property  =  Small-Slice.Monoidal.𝕌-merge-prop
 
-product-projection-0  =  Small-Slice.Cartesian.𝕌-prod-proj₁  
-product-projection-1  =  Small-Slice.Cartesian.𝕌-prod-proj₂
+product-projection-1  =  Small-Slice.Cartesian.𝕌-prod-proj₁  
+product-projection-2  =  Small-Slice.Cartesian.𝕌-prod-proj₂
 
 -- Proposition 12
 product-universal-property  =  Small-Slice.Cartesian.𝕌-prod-glue-unique
 
+share           =  Small-Slice.Monoidal.𝕌-share
+share-property  =  Small-Slice.Monoidal.𝕌-share-prop
+
 
 -- Subsection 4.2:  Semi Lattice Enriched
 
-join-on-morphisms  =  Small-Slice.Countable-Join.𝕌Hom-⋁
+join-on-morphisms      =  Small-Slice.Countable-Join.𝕌Hom-⋁
+binary-∨-on-morphisms  =  Small-Slice.Semi-Lattice.𝕌Hom-∨
+∨-is-share-merge       =  Small-Slice.Semi-Lattice.𝕌Hom-∨-alt
+
+
 
 -- Definition 14
 ω-chain  =  Small-Slice.Countable-Join.𝕌Hom-chain
@@ -173,7 +189,6 @@ composition-merges-chains     =  Small-Slice.Countable-Join.𝕌Hom-⋁-∘
 
 -- Subsection 4.3:  Monoidal
 
-import Small-Slice.Monoidal
 
 ⊗-Monoidal-bifunctor  =  Small-Slice.Monoidal.𝕌Hom-⊗
 

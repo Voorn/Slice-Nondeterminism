@@ -1,16 +1,19 @@
 module Slice-Functions.Category where
 
+-- standard library
 open import Data.Unit
 open import Data.Empty
-open import Data.Sum renaming (map to map⊎)
-open import Data.Product renaming (map to map×)
-open import Relation.Binary.PropositionalEquality hiding ([_])
+open import Data.Sum 
+open import Data.Product
 
+open import Relation.Binary.PropositionalEquality
+
+-- categories library
+open import Categories.Category
+
+-- local
 open import Slice-Functions.Base
 
-
--- Category
-open import Categories.Category
 
 SF-Cat : Category _ _ _
 SF-Cat = record

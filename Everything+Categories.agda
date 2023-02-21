@@ -14,8 +14,6 @@ open import Everything
 open import Small-Slice.SF-Cat
 
 
-
-
 -- Definition of the category of slice functions when allowing any set as slice index
 
 open import Slice-Functions.Category

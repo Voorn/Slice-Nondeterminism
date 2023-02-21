@@ -1,14 +1,16 @@
 module Method-Comparison where
 
+-- standard library
 open import Data.Unit
 open import Data.Bool
 open import Data.Sum 
 open import Data.Nat 
-open import Data.Product 
+open import Data.Product
+
 open import Relation.Binary.PropositionalEquality 
 
 
-
+-- ℕ→ℕ morphisms in three categories characterising relations
 Erel-ℕ : Set₁
 Erel-ℕ = ℕ → ℕ → Set
 
@@ -19,7 +21,7 @@ Slic-ℕ : Set₁
 Slic-ℕ = ℕ → Σ Set λ I → (I → ℕ)
 
 
---
+-- testing if input and output are related
 Erel-ℕ-test : Erel-ℕ → ℕ → ℕ → Set
 Erel-ℕ-test R = R
 
@@ -30,8 +32,7 @@ Slic-ℕ-test : Slic-ℕ → ℕ → ℕ → Set
 Slic-ℕ-test f n m = Σ (proj₁ (f n)) λ i → proj₂ (f n) i ≡ m
 
 
-
-
+-- identity morphism
 Erel-ℕ-id : Erel-ℕ
 Erel-ℕ-id n m = n ≡ m
 
@@ -59,7 +60,6 @@ Slic-ℕ-comp f g a = (Σ (proj₁ (f a)) λ i → proj₁ (g (proj₂ (f a) i))
 
 
 -- Representing the function that either keeps input, or increases it by one
-
 Erel-ℕ-toss : Erel-ℕ
 Erel-ℕ-toss n m = (n ≡ m) ⊎ (suc n ≡ m)
 
@@ -70,16 +70,14 @@ Slic-ℕ-toss : Slic-ℕ
 Slic-ℕ-toss n = Bool , (λ { false → n ; true → suc n})
 
 
-
+-- composing toss n times
 Erel-ℕ-multi-toss : (n : ℕ) → Erel-ℕ
 Erel-ℕ-multi-toss zero    = Erel-ℕ-id
 Erel-ℕ-multi-toss (suc n) = Erel-ℕ-comp Erel-ℕ-toss (Erel-ℕ-multi-toss n)
 
-
 Span-ℕ-multi-toss : (n : ℕ) → Span-ℕ
 Span-ℕ-multi-toss zero    = Span-ℕ-id
 Span-ℕ-multi-toss (suc n) = Span-ℕ-comp Span-ℕ-toss (Span-ℕ-multi-toss n)
-
 
 Slic-ℕ-multi-toss : (n : ℕ) → Slic-ℕ
 Slic-ℕ-multi-toss zero    = Slic-ℕ-id

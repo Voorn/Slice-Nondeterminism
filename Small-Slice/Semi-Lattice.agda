@@ -1,19 +1,22 @@
 module Small-Slice.Semi-Lattice where
 
+-- standard library
 open import Data.Unit
 open import Data.Empty
-open import Data.Sum renaming (map to map⊎)
-open import Data.Nat hiding (_⊔_)
-open import Data.Product renaming (map to map×)
+open import Data.Sum
+open import Data.Nat
+open import Data.Product
 
-open import Relation.Binary.PropositionalEquality hiding ([_])
- 
+open import Relation.Binary.PropositionalEquality
+
+-- local
 open import Small-Slice.Univ
 open import Small-Slice.ND-functions
+open import Small-Slice.Monoidal
 
 
 
-
+-- joins on slices
 𝕌SL-∨ : {X : Set} → 𝕌SL X → 𝕌SL X → 𝕌SL X
 𝕌SL-∨ (I , f) (J , g) = (𝕌⊎ I J) , (λ {(inj₁ i) → f i ; (inj₂ j) → g j})
 
@@ -26,7 +29,8 @@ open import Small-Slice.ND-functions
 𝕌SL-ω f x = (𝕌Σ (𝕌ℕ , (λ n → proj₁ (𝕌SL-ℕ f n x)))) , λ {(n , i) → proj₂ (𝕌SL-ℕ f n x) i}
 
 
--- Monoid
+
+-- Monoid structure on ∨
 𝕌SL-∨-⊂ : {X : Set} → {a₀ a₁ b₀ b₁ : 𝕌SL X} → (𝕌SL→ X a₀ a₁) → (𝕌SL→ X b₀ b₁)
   → (𝕌SL→ X (𝕌SL-∨ a₀ b₀) (𝕌SL-∨ a₁ b₁))
 𝕌SL-∨-⊂ a⊂ b⊂ (inj₁ i) = (inj₁ (proj₁ (a⊂ i))) , proj₂ (a⊂ i)
@@ -108,3 +112,11 @@ open import Small-Slice.ND-functions
 𝕌Hom-∨-supremum f f' g p q x = 𝕌SL-∨-supremum (f x) (f' x) (g x) (p x) (q x)
 
 
+
+-- ∨ via the share and merge operations
+𝕌Hom-∨-alt : {X Y : Set} → (f g : 𝕌Hom X Y)
+  → 𝕌Hom-≡ (𝕌Hom-∨ f g) (𝕌Hom-∘ (𝕌Hom-∘ 𝕌-merge (𝕌Hom-⊎ (f , g))) 𝕌-share)
+proj₁ (𝕌Hom-∨-alt f g) x (inj₁ i) = (inj₁ tt , i , tt) , refl
+proj₁ (𝕌Hom-∨-alt f g) x (inj₂ j) = (inj₂ tt , j , tt) , refl
+proj₂ (𝕌Hom-∨-alt f g) x (inj₁ tt , i , tt) = inj₁ i , refl
+proj₂ (𝕌Hom-∨-alt f g) x (inj₂ tt , j , tt) = inj₂ j , refl

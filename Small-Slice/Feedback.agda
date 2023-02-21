@@ -1,15 +1,18 @@
 module Small-Slice.Feedback where
 
+-- standard library
 open import Data.Unit
 open import Data.Empty
-open import Data.Sum renaming (map to map⊎)
-open import Data.Nat hiding (_⊔_)
-open import Data.Product renaming (map to map×)
-open import Relation.Binary.Core
+open import Data.Sum
+open import Data.Nat
+open import Data.Product
+
 open import Function.Base
-open import Relation.Binary.PropositionalEquality hiding ([_])
 
+open import Relation.Binary.Core
+open import Relation.Binary.PropositionalEquality
 
+-- local
 open import Small-Slice.Univ
 open import Small-Slice.ND-functions
 open import Small-Slice.Countable-Join
@@ -17,9 +20,9 @@ open import Small-Slice.Monoidal
 open import Small-Slice.Cartesian
 
 
+-- merge operation naturality
 𝕌Hom-⊎-merge : {X : Set} → 𝕌Hom (X ⊎ X) X
-𝕌Hom-⊎-merge (inj₁ x) = 𝕌SL-η x
-𝕌Hom-⊎-merge (inj₂ x) = 𝕌SL-η x
+𝕌Hom-⊎-merge = 𝕌-merge
 
 𝕌Hom-⊎-merge-nat : {X Y : Set} → (f : 𝕌Hom X Y)
   → 𝕌Hom-≡ (𝕌Hom-∘ 𝕌Hom-⊎-merge (𝕌Hom-⊎ (f , f))) (𝕌Hom-∘ f 𝕌Hom-⊎-merge)
@@ -29,7 +32,7 @@ proj₂ (𝕌Hom-⊎-merge-nat f) (inj₁ x) (tt , i) = (i , tt) , refl
 proj₂ (𝕌Hom-⊎-merge-nat f) (inj₂ x) (tt , i) = (i , tt) , refl
 
 
-
+-- iterating operation
 𝕌Iter : {X Y : Set} → 𝕌Hom X (Y ⊎ X) → ℕ → 𝕌Hom X Y
 𝕌Iter H zero x = 𝕌SL-⊥
 𝕌Iter H (suc n) = 𝕌Hom-∘ (𝕌-copr-glue (𝕌Hom-id _) (𝕌Iter H n)) H
@@ -62,6 +65,7 @@ proj₂ (proj₂ (Help2 f H K) x ((i , j) , k)) with proj₂ (H x) i
 ... | inj₁ x' = refl
 ... | inj₂ y = refl
 
+-- naturality of iteration
 𝕌Iter-nat₁ : {X X' Y : Set} → (f : 𝕌Hom X X') → (H : 𝕌Hom X' (Y ⊎ X)) → (n : ℕ)
   → 𝕌Hom-≡ (𝕌Iter (𝕌Hom-∘ H f) n) (𝕌Hom-∘ (𝕌Iter (𝕌Hom-∘ (𝕌Hom-⊎ (𝕌Hom-id _ , f)) H) n) f)
 𝕌Iter-nat₁ f H zero = (λ {x ()}) , λ {x ()}

@@ -1,17 +1,20 @@
 module Small-Slice.Marbles where
 
+-- standard library
 open import Data.Unit
 open import Data.Empty
-open import Data.Sum renaming (map to map⊎)
-open import Data.Nat hiding (_⊔_)
-open import Data.Product renaming (map to map×)
-open import Relation.Binary.PropositionalEquality hiding ([_])
+open import Data.Sum
+open import Data.Nat
+open import Data.Product
 
+open import Relation.Binary.PropositionalEquality
 
+-- local
 open import Small-Slice.Univ
 open import Small-Slice.ND-functions
 
 
+-- list monad
 data 𝕃 (X : Set) : Set where
   end : 𝕃 X
   app : X → 𝕃 X → 𝕃 X 
@@ -22,6 +25,7 @@ data 𝕃 (X : Set) : Set where
 𝕃-conc (app x a) b = app x (𝕃-conc a b)
 
 
+-- multiplication and stratification
 𝕃-μ : (X : Set) → 𝕌Hom ((𝕃 X) × (𝕃 X)) (𝕃 X)
 𝕃-μ X (a , b) = 𝕌SL-η (𝕃-conc a b)
 
@@ -33,6 +37,7 @@ proj₂ (𝕃-δ X end) tt = end , end
 proj₂ (𝕃-δ X (app x a)) (inj₁ tt) = end , (app x a)
 proj₂ (𝕃-δ X (app x a)) (inj₂ i) with proj₂ (𝕃-δ X a) i
 ... | a' , b' = (app x a') , b'
+
 
 
 𝕃-δμ⊂id : (X : Set) → 𝕌Hom-⊂ (𝕌Hom-∘ (𝕃-μ X) (𝕃-δ X)) (𝕌Hom-id (𝕃 X))
@@ -53,21 +58,16 @@ proj₂ (𝕃-δ X (app x a)) (inj₂ i) with proj₂ (𝕃-δ X a) i
 ... | (tt , i) , eq = (tt , (inj₂ i)) , (cong (λ v → app x (proj₁ v) , (proj₂ v)) eq)
 
 
-
-
-
+-- empty and empty chack
 𝕃-η : (X : Set) → 𝕌Hom ⊤ (𝕃 X)
 𝕃-η X tt = 𝕌SL-η end
-
 
 𝕃-ε : (X : Set) → 𝕌Hom (𝕃 X) ⊤
 𝕃-ε X end = 𝕌⊤ , (λ i → tt)
 𝕃-ε X (app x a) = 𝕌⊥ , (λ {()})
 
-
 𝕃-id⊂ηε : (X : Set) → 𝕌Hom-⊂ (𝕌Hom-id ⊤) (𝕌Hom-∘ (𝕃-ε X) (𝕃-η X))
 𝕃-id⊂ηε X tt i = (tt , tt) , refl
-
 
 𝕃-ηε⊂id : (X : Set) → 𝕌Hom-⊂ (𝕌Hom-∘ (𝕃-ε X) (𝕃-η X)) (𝕌Hom-id ⊤)
 𝕃-ηε⊂id X tt i = tt , refl
@@ -80,6 +80,7 @@ proj₂ (𝕃-δ X (app x a)) (inj₂ i) with proj₂ (𝕃-δ X a) i
 open import Small-Slice.Monoidal
 open import Small-Slice.Semi-Lattice
 
+-- props over lists
 Prop-⊗ : (X : Set) → ℕ → Set
 Prop-⊗ X zero = ⊤
 Prop-⊗ X (suc n) = X × Prop-⊗ X n
@@ -92,9 +93,6 @@ Prop-β : (X : Set) → {n m : ℕ} → Prop-⊗ X (n + m) → (Prop-⊗ X n) ×
 Prop-β X {zero} {m} u = tt , u
 Prop-β X {suc n} {m} (x , u) with Prop-β X {n} {m} u
 ...| (v , w) = (x , v) , w
-
---Prop-place : (X : Set) → {n m : ℕ} → (f : 𝕌Hom (Prop-⊗ X n) (Prop-⊗ X m)) → (a b : ℕ)
---  → 𝕌Hom (Prop-⊗ X (a + (n + b))) (Prop-⊗ X (a + (m + b)))
 
 α-map : {X : Set} → (X × (X × X)) → ((X × X) × X)
 α-map (a , b , c) = (a , b) , c

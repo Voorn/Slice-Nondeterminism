@@ -1,18 +1,39 @@
 module Small-Slice.SF-Cat where
 
+-- standard library
 open import Data.Unit
 open import Data.Empty
-open import Data.Sum renaming (map to map⊎)
-open import Data.Nat hiding (_⊔_)
-open import Data.Product renaming (map to map×)
-open import Relation.Binary.PropositionalEquality hiding ([_])
+open import Data.Sum
+open import Data.Nat
+open import Data.Product
 
+open import Relation.Binary.PropositionalEquality
+
+-- categories library
 open import Categories.Category
+open import Categories.Category.Monoidal
+open import Categories.Category.Monoidal.Braided
+open import Categories.Category.BinaryProducts
+open import Categories.Category.Cocartesian
+open import Categories.Category.Cartesian
 
+open import Categories.Object.Terminal
+open import Categories.Object.Initial
+
+open import Categories.Morphism
+
+open import Categories.Functor.Bifunctor
+
+open import Categories.NaturalTransformation.NaturalIsomorphism hiding (refl)
+
+-- local
 open import Small-Slice.Univ
 open import Small-Slice.ND-functions
+open import Small-Slice.Monoidal
+open import Small-Slice.Cartesian
 
 
+-- the E-category of small slice nondeterministic functions, SNF
 SSF-Cat : Category _ _ _
 SSF-Cat = record
    { Obj = Set
@@ -30,10 +51,7 @@ SSF-Cat = record
    }
 
 
-open import Small-Slice.Monoidal
-
-open import Categories.Functor.Bifunctor
-
+-- ⊗ bifunctor over ×
 ⊗-Bifunctor : Bifunctor SSF-Cat SSF-Cat SSF-Cat
 ⊗-Bifunctor = record
   { F₀ = λ {(A , B) → A × B}
@@ -43,9 +61,7 @@ open import Categories.Functor.Bifunctor
   ; F-resp-≈ = 𝕌Hom-⊗-≡
   }
 
-open import Categories.Morphism
-open import Categories.Category.Monoidal
-
+-- Symmetric monoidal structure over ⊗
 ⊗-left-unitor : {X : Set} → (SSF-Cat ≅ (⊤ × X)) X
 ⊗-left-unitor = record
   { from = 𝕌Hom-⊗-luni
@@ -76,7 +92,6 @@ open import Categories.Category.Monoidal
     }
   }
 
--- Note: most extra proofs are just inherited from monoidal structure on set.
 ⊗-Monoidal : Monoidal SSF-Cat
 ⊗-Monoidal = record
   { ⊗ = ⊗-Bifunctor
@@ -103,8 +118,6 @@ open import Categories.Category.Monoidal
   ; pentagon = (λ x i → (tt , tt) , refl) , (λ x i → (((tt , tt) , tt) , (tt , tt)) , refl)
   }
 
-open import Categories.NaturalTransformation.NaturalIsomorphism hiding (refl)
-open import Categories.Category.Monoidal.Braided
 
 ⊗-braided : Braided ⊗-Monoidal
 ⊗-braided = record
@@ -122,9 +135,19 @@ open import Categories.Category.Monoidal.Braided
                (λ x i → ((tt , tt) , (tt , (tt , tt))) , refl)
   }
 
+-- ⊕ Bifunctor over disjoint union
+⊕-Bifunctor : Bifunctor SSF-Cat SSF-Cat SSF-Cat
+⊕-Bifunctor = record
+  { F₀ = λ {(A , B) → A ⊎ B}
+  ; F₁ = 𝕌Hom-⊎
+  ; identity = 𝕌Hom-⊎-id _ _
+  ; homomorphism = 𝕌Hom-⊎-∘ _ _
+  ; F-resp-≈ = 𝕌Hom-⊎-≡ _ _
+  }
 
-⊎-left-unitor : {X : Set} → (SSF-Cat ≅ (⊥ ⊎ X)) X
-⊎-left-unitor = record
+-- Symmetric monoidal structure over ⊕
+⊕-left-unitor : {X : Set} → (SSF-Cat ≅ (⊥ ⊎ X)) X
+⊕-left-unitor = record
   { from = 𝕌Hom-⊎-luni
   ; to = 𝕌Hom-⊎-luni-rev
   ; iso = record
@@ -133,8 +156,8 @@ open import Categories.Category.Monoidal.Braided
     }
   }
 
-⊎-right-unitor : {X : Set} → (SSF-Cat ≅ (X ⊎ ⊥)) X
-⊎-right-unitor = record
+⊕-right-unitor : {X : Set} → (SSF-Cat ≅ (X ⊎ ⊥)) X
+⊕-right-unitor = record
   { from = 𝕌Hom-⊎-runi
   ; to = 𝕌Hom-⊎-runi-rev
   ; iso = record
@@ -143,8 +166,8 @@ open import Categories.Category.Monoidal.Braided
     }
   }
 
-⊎-associator : {X Y Z : Set} → (SSF-Cat ≅ ((X ⊎ Y) ⊎ Z)) (X ⊎ (Y ⊎ Z))
-⊎-associator = record
+⊕-associator : {X Y Z : Set} → (SSF-Cat ≅ ((X ⊎ Y) ⊎ Z)) (X ⊎ (Y ⊎ Z))
+⊕-associator = record
   { from = 𝕌Hom-⊎-asso
   ; to = 𝕌Hom-⊎-asso-rev
   ; iso = record
@@ -164,22 +187,13 @@ open import Categories.Category.Monoidal.Braided
   }
 
 
-⊎-Bifunctor : Bifunctor SSF-Cat SSF-Cat SSF-Cat
-⊎-Bifunctor = record
-  { F₀ = λ {(A , B) → A ⊎ B}
-  ; F₁ = 𝕌Hom-⊎
-  ; identity = 𝕌Hom-⊎-id _ _
-  ; homomorphism = 𝕌Hom-⊎-∘ _ _
-  ; F-resp-≈ = 𝕌Hom-⊎-≡ _ _
-  }
-
-⊎-Monoidal : Monoidal SSF-Cat
-⊎-Monoidal = monoidalHelper SSF-Cat (record
-  { ⊗ = ⊎-Bifunctor
+⊕-Monoidal : Monoidal SSF-Cat
+⊕-Monoidal = monoidalHelper SSF-Cat (record
+  { ⊗ = ⊕-Bifunctor
   ; unit = ⊥
-  ; unitorˡ = ⊎-left-unitor
-  ; unitorʳ = ⊎-right-unitor
-  ; associator = ⊎-associator
+  ; unitorˡ = ⊕-left-unitor
+  ; unitorʳ = ⊕-right-unitor
+  ; associator = ⊕-associator
   ; unitorˡ-commute = (λ {(inj₂ y) (i , tt) → (tt , i) , refl}) ,
                        λ {(inj₂ y) (tt , i) → (i , tt) , refl}
   ; unitorʳ-commute = (λ {(inj₁ y) (i , tt) → (tt , i) , refl}) ,
@@ -202,10 +216,39 @@ open import Categories.Category.Monoidal.Braided
                    (inj₂ w) i → ((tt , tt) , tt) , refl}
   })
 
-open import Small-Slice.Cartesian
+⊕-braided : Braided ⊕-Monoidal
+⊕-braided = record
+  { braiding = niHelper (record
+    { η = λ { X (inj₁ x) → 𝕌SL-η (inj₂ x) ; X (inj₂ y) → 𝕌SL-η (inj₁ y)}
+    ; η⁻¹ = λ { X (inj₁ y) → 𝕌SL-η (inj₂ y) ; X (inj₂ x) → 𝕌SL-η (inj₁ x)}
+    ; commute = λ {(f , g) →
+                   (λ { (inj₁ x) (i , tt) → (tt , i) , refl ;
+                        (inj₂ y) (j , tt) → (tt , j) , refl}) ,
+                    λ { (inj₁ x) (tt , i) → (i , tt) , refl ;
+                        (inj₂ y) (tt , j) → (j , tt) , refl}}
+    ; iso = λ X → record
+      { isoˡ = (λ {(inj₁ x) i → tt , refl ; (inj₂ y) i → tt , refl}) ,
+               λ {(inj₁ x) i → (tt , tt) , refl ; (inj₂ y) i → (tt , tt) , refl}
+      ; isoʳ = (λ {(inj₁ x) i → tt , refl ; (inj₂ y) i → tt , refl}) ,
+               λ {(inj₁ x) i → (tt , tt) , refl ; (inj₂ y) i → (tt , tt) , refl}
+      }
+    })
+  ; hexagon₁ = (λ { (inj₁ (inj₁ x)) i → ((tt , tt) , tt) , refl
+               ;   (inj₁ (inj₂ y)) i → ((tt , tt) , tt) , refl
+               ;         (inj₂ z) i → ((tt , tt) , tt) , refl}) ,
+               λ { (inj₁ (inj₁ x)) i → ((tt , tt) , tt) , refl
+               ;   (inj₁ (inj₂ y)) i → ((tt , tt) , tt) , refl
+               ;         (inj₂ z) i → ((tt , tt) , tt) , refl}
+  ; hexagon₂ = (λ {       (inj₁ x) i → (tt , tt , tt) , refl ;
+                    (inj₂ (inj₁ y)) i → (tt , tt , tt) , refl ;
+                    (inj₂ (inj₂ z)) i → (tt , tt , tt) , refl}) ,
+               λ {       (inj₁ x) i → (tt , tt , tt) , refl ;
+                  (inj₂ (inj₁ y)) i → (tt , tt , tt) , refl ;
+                  (inj₂ (inj₂ z)) i → (tt , tt , tt) , refl}
+  }
 
-open import Categories.Object.Terminal
 
+-- Cartesian and Cocartesian structure
 SSF-Terminal : Terminal SSF-Cat
 SSF-Terminal = record
   { ⊤ = ⊥
@@ -215,7 +258,6 @@ SSF-Terminal = record
     }
   }
 
-open import Categories.Object.Initial
 
 SSF-Initial : Initial SSF-Cat
 SSF-Initial = record
@@ -226,8 +268,6 @@ SSF-Initial = record
     }
   }
 
-
-open import Categories.Category.BinaryProducts
 
 SSF-Product : BinaryProducts SSF-Cat
 SSF-Product = record
@@ -243,7 +283,6 @@ SSF-Product = record
   }
 
 
-open import Categories.Category.Cocartesian
 
 SSF-Coproduct : BinaryCoproducts SSF-Cat
 SSF-Coproduct = record { coproduct = λ {A} {B} → record
@@ -257,7 +296,6 @@ SSF-Coproduct = record { coproduct = λ {A} {B} → record
   }}
 
 
-open import Categories.Category.Cartesian
 
 SSF-Cartesian : Cartesian SSF-Cat
 SSF-Cartesian = record

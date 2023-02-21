@@ -1,19 +1,21 @@
 module Small-Slice.Monoidal where
 
+-- standard library
 open import Data.Unit
 open import Data.Empty
-open import Data.Sum renaming (map to map⊎)
-open import Data.Nat hiding (_⊔_)
-open import Data.Product renaming (map to map×)
-open import Relation.Binary.PropositionalEquality hiding ([_])
+open import Data.Sum
+open import Data.Nat
+open import Data.Product
+open import Relation.Binary.PropositionalEquality
 
+-- local
 open import Small-Slice.Univ
 open import Small-Slice.ND-functions
 open import Small-Slice.Substructure
+open import Small-Slice.Cartesian
 
 
-
-
+-- disjoint union of slices
 𝕌SL-⊎ : {X Y : Set} → (𝕌SL X ⊎ 𝕌SL Y) → 𝕌SL (X ⊎ Y)
 𝕌SL-⊎ (inj₁ (I , f)) = I , λ i → inj₁ (f i)
 𝕌SL-⊎ (inj₂ (J , g)) = J , λ j → inj₂ (g j)
@@ -27,13 +29,9 @@ open import Small-Slice.Substructure
 𝕌SL-⊎→2 p i = (proj₁ (p i)) , (cong inj₂ (proj₂ (p i)))
 
 
-
-
 𝕌SL-⊗-⊎ : {X Y : Set} → 𝕌SL (X × Y) → 𝕌SL (X ⊎ Y) 
 𝕌SL-⊗-⊎ (I , f) = (𝕌⊎ I I) , (λ { (inj₁ i) → inj₁ (proj₁ (f i)) ;
                                   (inj₂ i) → inj₂ (proj₂ (f i))})
-
-
 
 𝕌SL-⊗ : {X Y  : Set} → 𝕌SL X → 𝕌SL Y → 𝕌SL (X × Y)
 𝕌SL-⊗ (I , f) (J , g) = (𝕌× I J) , (λ {(x , y) → (f x) , (g y)})
@@ -58,7 +56,7 @@ open import Small-Slice.Substructure
 𝕌Bihom-≡ (f , f') (g , g') = 𝕌Hom-≡ f g × 𝕌Hom-≡ f' g'
 
 
--- Bifunctor
+-- Bifunctor on ×
 𝕌Hom-⊗ : {X X' Y Y' : Set} → (p : 𝕌Hom X X' × 𝕌Hom Y Y')
   → 𝕌Hom (X × Y) (X' × Y')
 𝕌Hom-⊗ (f , g) (x , y) = 𝕌SL-⊗ (f x) (g y)
@@ -209,3 +207,26 @@ proj₂ (𝕌Hom-⊎-id X Y) (inj₂ x) i = (tt , refl)
 𝕌Hom-⊎-asso-rev (inj₂ (inj₁ y)) = 𝕌SL-η (inj₁ (inj₂ y))
 𝕌Hom-⊎-asso-rev (inj₂ (inj₂ z)) = 𝕌SL-η (inj₂ z)
 
+
+-- merge operation
+𝕌-merge :  {X : Set} → 𝕌Hom (X ⊎ X) X
+𝕌-merge {X} = 𝕌-copr-glue (𝕌Hom-id X) (𝕌Hom-id X)
+
+𝕌-merge-prop : {X Y Z : Set} → (f : 𝕌Hom X Z) → (g : 𝕌Hom Y Z)
+  → 𝕌Hom-≡ (𝕌Hom-∘ 𝕌-merge (𝕌Hom-⊎ (f , g))) (𝕌-copr-glue f g)
+proj₁ (𝕌-merge-prop f g) (inj₁ x) (i , tt) = i , refl
+proj₁ (𝕌-merge-prop f g) (inj₂ y) (j , tt) = j , refl
+proj₂ (𝕌-merge-prop f g) (inj₁ x) i = (i , tt) , refl
+proj₂ (𝕌-merge-prop f g) (inj₂ y) j = (j , tt) , refl
+
+
+-- share operation
+𝕌-share :  {X : Set} → 𝕌Hom X (X ⊎ X)
+𝕌-share {X} = 𝕌-prod-glue (𝕌Hom-id X) (𝕌Hom-id X)
+
+𝕌-share-prop : {X Y Z : Set} → (f : 𝕌Hom X Y) → (g : 𝕌Hom X Z)
+  → 𝕌Hom-≡ (𝕌Hom-∘ (𝕌Hom-⊎ (f , g)) 𝕌-share) (𝕌-prod-glue f g)
+proj₁ (𝕌-share-prop f g) x (inj₁ tt , i) = (inj₁ i) , refl
+proj₁ (𝕌-share-prop f g) x (inj₂ tt , j) = (inj₂ j) , refl
+proj₂ (𝕌-share-prop f g) x (inj₁ i) = (inj₁ tt , i) , refl
+proj₂ (𝕌-share-prop f g) x (inj₂ j) = (inj₂ tt , j) , refl

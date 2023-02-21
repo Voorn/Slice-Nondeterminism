@@ -1,19 +1,21 @@
 module Small-Slice.Countable-Join where
 
+-- standard library
 open import Data.Unit
 open import Data.Empty
-open import Data.Sum renaming (map to map⊎)
+open import Data.Sum 
 open import Data.Nat
-open import Data.Product renaming (map to map×)
+open import Data.Product
 
-open import Relation.Binary.PropositionalEquality hiding ([_])
- 
+open import Relation.Binary.PropositionalEquality
+
+-- local
 open import Small-Slice.Univ
 open import Small-Slice.ND-functions
 open import Small-Slice.Semi-Lattice
 
 
-
+-- supremum on slices
 𝕌SL-⋁ : {X : Set} → (U : 𝕌) → (𝕌S U → 𝕌SL X) → 𝕌SL X
 𝕌SL-⋁ U f = (𝕌Σ (U , (λ n → proj₁ (f n)))) , λ {(n , i) → proj₂ (f n) i}
 
@@ -30,6 +32,7 @@ open import Small-Slice.Semi-Lattice
 𝕌SL-⋁-supremum U C S C<S (i , j) = C<S i j
 
 
+-- supremum on morphisms
 𝕌Hom-⋁ : {X Y : Set} → (U : 𝕌) → (𝕌S U → 𝕌Hom X Y) → 𝕌Hom X Y
 𝕌Hom-⋁ U S x = 𝕌SL-⋁ U (λ n → S n x)
 
@@ -53,7 +56,7 @@ proj₂ (𝕌Hom-⋁-r∘ U S f) x (n , i , j) = ((n , i) , j) , refl
 
 
 
--- just proving what I need for feedback to work
+-- auxiliary lemma for iteration-feedback results
 
 open import Small-Slice.Cartesian
 
@@ -65,7 +68,7 @@ proj₂ (𝕌Hom-⋁-copr-glue-r f C) (inj₁ x) (n , i) = i , refl
 proj₂ (𝕌Hom-⋁-copr-glue-r f C) (inj₂ y) (n , i) = (n , i) , refl
 
 
--- chains
+-- ω-chains
 
 𝕌Hom-chain : {X Y : Set} → ((ℕ → 𝕌Hom X Y) → Set)
 𝕌Hom-chain S = (n : ℕ) → 𝕌Hom-⊂ (S n) (S (suc n))
@@ -110,7 +113,7 @@ proj₂ (𝕌Hom-⋁-copr-glue-r f C) (inj₂ y) (n , i) = (n , i) , refl
   (𝕌Hom-chain-plus C C-chain m k)
 
 
-
+-- chain preservation results
 𝕌Hom-chain-∘ : {X Y Z : Set} → (F : ℕ → 𝕌Hom X Y) → (G : ℕ → 𝕌Hom Y Z)
   → 𝕌Hom-chain F → 𝕌Hom-chain G → 𝕌Hom-chain (λ n → 𝕌Hom-∘ (G n) (F n))
 𝕌Hom-chain-∘ F G F-chain G-chain n = 𝕌Hom-∘⊂ (F-chain n) (G-chain n)
@@ -160,4 +163,6 @@ proj₁ (𝕌Hom-⋁-⊗ F G F-chain G-chain) xz ((n , i) , (m , j))
        ((𝕌Hom-chain-lmax F F-chain n m) , (𝕌Hom-chain-rmax G G-chain n m)) xz (i , j)
 ... | (u , eq) = ((n ⊔ m) , u) , eq
 proj₂ (𝕌Hom-⋁-⊗ F G F-chain G-chain) (x , z) (n , i , j) = ((n , i) , n , j) , refl
+
+
 
