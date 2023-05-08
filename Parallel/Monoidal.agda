@@ -98,7 +98,7 @@ proj₂ (ℙ-moncom-unit A E X Y) (ret x , ret y) (i , j) = ((inj₁ tt) , tt) ,
   (((inj₁ tt) , inj₁ tt) , (inj₁ tt) , (inj₂ i)) , refl
 ℙ-moncom-multℝ< A E X Y (err e , act b r) (i , inj₁ j) =
   (((inj₁ tt) , inj₁ tt) , (inj₁ tt) , (inj₂ i)) , refl
-ℙ-moncom-multℝ< A E X Y  (ret x , err e) (i , inj₁ x) =
+ℙ-moncom-multℝ< A E X Y  (ret x , err e) (i , inj₁ tt) =
   ((tt , (inj₁ tt)) , ((inj₁ tt) , (inj₂ tt))) , refl
 ℙ-moncom-multℝ< A E X Y  (act a r , err e) (i , inj₁ x) =
   (((inj₁ tt) , (inj₁ tt)) , ((inj₁ tt) , (inj₂ tt))) , refl
