@@ -29,6 +29,10 @@ open import Small-Slice.Univ
 -- kleisli category over the small slice endofunctor (Section 3.1)
 open import Small-Slice.ND-functions
 
+-- Comparison of methods: tossing coins (Section 7.1)
+open import Method-Comparison
+
+
 
 -- Structure of the category
 
@@ -40,6 +44,7 @@ open import Small-Slice.Cartesian
 
 -- the category has a monoidal structure associated to the Cartesian product on sets (Section 4.3)
 open import Small-Slice.Monoidal
+
 
 
 -- Joins and recursion
@@ -54,6 +59,7 @@ open import Small-Slice.Countable-Join
 open import Small-Slice.Feedback
 
 
+
 -- Example models
 
 -- free monads from Set lifted to reversible structures as nondeterministic processes (Section 5)
@@ -65,13 +71,13 @@ open import Small-Slice.Marbles
 -- labelled transition systems (Section 6.3)
 open import Small-Slice.LTS
 
-
--- Comparison of methods: tossing coins (Section 7.1)
-open import Method-Comparison
-
+-- Untyped call-by-value lambda calculus with nondeterminism
+open import Small-Slice.Lambda
 
 
 
+
+-- =====================================================================================
 
 -- Big Slices: Earlier development using the universe of all sets space of indexing sets
 

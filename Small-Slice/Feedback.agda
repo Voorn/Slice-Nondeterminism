@@ -211,6 +211,11 @@ proj₂ (𝕌Iter-chain H (suc n) x (i , j)) with proj₂ (H x) i
       (𝕌Hom-⋁-r∘ 𝕌ℕ (𝕌Iter H) f))
 
 
+𝕌Iterω-terminate : (X : Set) → 𝕌Hom-≡ (𝕌Iterω {X} {X} (𝕌Hom-fun inj₁)) (𝕌Hom-id X)
+proj₁ (𝕌Iterω-terminate X) x (suc n , i) = tt , refl
+proj₂ (𝕌Iterω-terminate X) x tt = (1 , (tt , tt)) , refl
+
+
 ⊎αm : {X Y : Set} → ((X ⊎ Y) ⊎ X) → (X ⊎ Y)
 ⊎αm (inj₁ (inj₁ x)) = inj₁ x
 ⊎αm (inj₁ (inj₂ y)) = inj₂ y
