@@ -1,7 +1,7 @@
 module ITP-paper where
 
 -- This file imports terms associated to definitions and proofs from the ITP 2023 paper
--- submission "Slice Nondeterminism". Comments refer to name of definition or resul in
+-- submission "Slice Nondeterminism". Comments refer to name of definition or result in
 -- in the paper, and a selection of in-line definition and results are included too.
 
 
@@ -118,13 +118,18 @@ monomorphism-conditions  =  Small-Slice.Substructure.𝕌-mono-con
 total-deterministic-is-set-1  =  Small-Slice.Substructure.𝕊→𝕌→𝕊
 total-deterministic-is-set-2  =  Small-Slice.Substructure.𝕌→𝕊→𝕌
 
--- Subsection 3.3:  Morphisms with Daggers
 
--- Definition 9
-Eachothers-dagger   =  Small-Slice.Substructure.𝕌-is-†
+-- Subsection 3.3:  Method Comparison
 
-Morphism-is-daggerable  =  Small-Slice.Substructure.𝕌-Dagger
+import  Method-Comparison
 
+Erel-ℕ-toss   =   Method-Comparison.Erel-ℕ-toss
+Span-ℕ-toss   =   Method-Comparison.Span-ℕ-toss
+Slic-ℕ-toss   =   Method-Comparison.Slic-ℕ-toss
+
+Erel-ℕ-example  =  Method-Comparison.Erel-ℕ-example
+Span-ℕ-example  =  Method-Comparison.Span-ℕ-example
+Slic-ℕ-example  =  Method-Comparison.Slic-ℕ-example
 
 
 ----------------------------------------
@@ -137,7 +142,15 @@ import Small-Slice.Monoidal
 Set→SNF-functor  =  Small-Slice.ND-functions.𝕌Hom-fun
 
 
--- Subsection 4.1:  Products and Coproducts
+-- Subsection 4.1:  Morphisms with Daggers
+
+-- Definition 9
+Eachothers-dagger   =  Small-Slice.Substructure.𝕌-is-†
+
+Morphism-is-daggerable  =  Small-Slice.Substructure.𝕌-Dagger
+
+
+-- Subsection 4.2:  Products and Coproducts
 
 -- Lemma 10
 terminal-map            =  Small-Slice.Cartesian.𝕌-termin
@@ -167,7 +180,7 @@ share           =  Small-Slice.Monoidal.𝕌-share
 share-property  =  Small-Slice.Monoidal.𝕌-share-prop
 
 
--- Subsection 4.2:  Semi Lattice Enriched
+-- Subsection 4.3:  Semi Lattice Enriched
 
 join-on-morphisms      =  Small-Slice.Countable-Join.𝕌Hom-⋁
 binary-∨-on-morphisms  =  Small-Slice.Semi-Lattice.𝕌Hom-∨
@@ -187,7 +200,7 @@ composition-merges-chains     =  Small-Slice.Countable-Join.𝕌Hom-⋁-∘
 ⊗-product--merges-chains     =  Small-Slice.Countable-Join.𝕌Hom-⋁-⊗
 
 
--- Subsection 4.3:  Monoidal
+-- Subsection 4.4:  Monoidal
 
 
 ⊗-Monoidal-bifunctor  =  Small-Slice.Monoidal.𝕌Hom-⊗
@@ -301,22 +314,6 @@ LTS-completeness  =  Small-Slice.LTS.LTS-complete
 
 
 
------------------------------
--- Section 7:  Conclusions --
------------------------------
-
-
--- Subsection 7.1:  Method Comparison
-
-import  Method-Comparison
-
-Erel-ℕ-toss   =   Method-Comparison.Erel-ℕ-toss
-Span-ℕ-toss   =   Method-Comparison.Span-ℕ-toss
-Slic-ℕ-toss   =   Method-Comparison.Slic-ℕ-toss
-
-Erel-ℕ-example  =  Method-Comparison.Erel-ℕ-example
-Span-ℕ-example  =  Method-Comparison.Span-ℕ-example
-Slic-ℕ-example  =  Method-Comparison.Slic-ℕ-example
 
 
 

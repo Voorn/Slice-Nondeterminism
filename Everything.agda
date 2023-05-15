@@ -9,7 +9,7 @@ module Everything where
 -- This repository contains the development of formalisations for the category of relations,
 -- via a technique self-named "Slice Nondeterminism".
 
--- A paper on Slice Nondeterminism is currently submitted for evaluation to ITP 2023.
+-- A paper on Slice Nondeterminism is accepted for publication at ITP 2023.
 -- The paper focusses on the formalisation done in the Small-Slice subfolder,
 -- though it also references some other material
 
@@ -29,20 +29,17 @@ open import Small-Slice.Univ
 -- kleisli category over the small slice endofunctor (Section 3.1)
 open import Small-Slice.ND-functions
 
--- Comparison of methods: tossing coins (Section 7.1)
-open import Method-Comparison
-
 
 
 -- Structure of the category
 
--- optional properties of morphisms, which specify subcategories (Section 3.2 and 3.3)
+-- optional properties of morphisms and daggerability (Section 3.2 and 4.1)
 open import Small-Slice.Substructure
 
--- the category has products and coproducts (Section 4.1)
+-- the category has products and coproducts (Section 4.2)
 open import Small-Slice.Cartesian
 
--- the category has a monoidal structure associated to the Cartesian product on sets (Section 4.3)
+-- the category has a monoidal structure associated to the Cartesian product on sets (Section 4.4)
 open import Small-Slice.Monoidal
 
 
@@ -52,7 +49,7 @@ open import Small-Slice.Monoidal
 -- the category can be enriched with a join semi-lattic structure (Section 2.5 and 4.2)
 open import Small-Slice.Semi-Lattice
 
--- countable joins and omega chains (Section 2.5 and 4.2)
+-- countable joins and omega chains (Section 2.5 and 4.3)
 open import Small-Slice.Countable-Join
 
 -- feedback and iteration, towards traced monoidal (Section 6.2)
@@ -74,6 +71,10 @@ open import Small-Slice.LTS
 -- Untyped call-by-value lambda calculus with nondeterminism
 open import Small-Slice.Lambda
 
+
+
+-- Comparison of methods: tossing coins (Section 3.3)
+open import Method-Comparison
 
 
 
